@@ -1,0 +1,240 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 60;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		1C5DC4C4CBC23B717578278D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C03E1345F293269F65074E45 /* Assets.xcassets */; };
+		3F290F7D7453DB60D7B074B3 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C69F9604FA8B9A8A6D31CDF8 /* ContentView.swift */; };
+		67D318DB593AC61064B1537C /* Preview Content/Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4237E724E8AACAF9A39E2F60 /* Preview Content/Preview Assets.xcassets */; };
+		DCBCF10B13B4EB3614A7ECB5 /* PokerPotOddsApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11D7B754C251DAC338418F15 /* PokerPotOddsApp.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		11D7B754C251DAC338418F15 /* PokerPotOddsApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PokerPotOddsApp.swift; sourceTree = "<group>"; };
+		4237E724E8AACAF9A39E2F60 /* Preview Content/Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Content/Preview Assets.xcassets"; sourceTree = "<group>"; };
+		54BAE0D6806F2B215DC0EB93 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		6C0DD639EF033F792E850740 /* PokerPotOdds.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; path = PokerPotOdds.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		C03E1345F293269F65074E45 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		C69F9604FA8B9A8A6D31CDF8 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		F356266E071EFB8C8EDC3692 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		2A39B54DE94229C7B5D821FA /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				6C0DD639EF033F792E850740 /* PokerPotOdds.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		60BE3C381C0A515115671050 = {
+			isa = PBXGroup;
+			children = (
+				E5D491A1E82DC6D93EBCE2A4 /* PokerPotOdds */,
+				2A39B54DE94229C7B5D821FA /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		E5D491A1E82DC6D93EBCE2A4 /* PokerPotOdds */ = {
+			isa = PBXGroup;
+			children = (
+				11D7B754C251DAC338418F15 /* PokerPotOddsApp.swift */,
+				C69F9604FA8B9A8A6D31CDF8 /* ContentView.swift */,
+				C03E1345F293269F65074E45 /* Assets.xcassets */,
+				4237E724E8AACAF9A39E2F60 /* Preview Content/Preview Assets.xcassets */,
+				54BAE0D6806F2B215DC0EB93 /* Info.plist */,
+			);
+			path = PokerPotOdds;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		FE998804D1930A97B1CC12E4 /* PokerPotOdds */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2DA83BCE6133036ABDF95DA5 /* Build configuration list for PBXNativeTarget "PokerPotOdds" */;
+			buildPhases = (
+				966CD9812B8FF3CC9C905DE8 /* Sources */,
+				D8BB061F700CBD89A04066AE /* Resources */,
+				F356266E071EFB8C8EDC3692 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = PokerPotOdds;
+			productName = PokerPotOdds;
+			productReference = 6C0DD639EF033F792E850740 /* PokerPotOdds.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		4873A681E02301A8997FA704 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					FE998804D1930A97B1CC12E4 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = 9AB17FDAC8DC912A65949829 /* Build configuration list for PBXProject "PokerPotOdds" */;
+			compatibilityVersion = "Xcode 15.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 60BE3C381C0A515115671050;
+			productRefGroup = 2A39B54DE94229C7B5D821FA /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				FE998804D1930A97B1CC12E4 /* PokerPotOdds */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		D8BB061F700CBD89A04066AE /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1C5DC4C4CBC23B717578278D /* Assets.xcassets in Resources */,
+				67D318DB593AC61064B1537C /* Preview Content/Preview Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		966CD9812B8FF3CC9C905DE8 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DCBCF10B13B4EB3614A7ECB5 /* PokerPotOddsApp.swift in Sources */,
+				3F290F7D7453DB60D7B074B3 /* ContentView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		00A174D62F8BC940C7649BD8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = U7WAWLP77B;
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = PokerPotOdds/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.PokerPotOdds;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		4854A9622DC8497CA75F92A6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		9FC855CE1141488A1AECF7AE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		FB121C2C379C819D751B0520 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = U7WAWLP77B;
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = PokerPotOdds/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.PokerPotOdds;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		2DA83BCE6133036ABDF95DA5 /* Build configuration list for PBXNativeTarget "PokerPotOdds" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FB121C2C379C819D751B0520 /* Debug */,
+				00A174D62F8BC940C7649BD8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		9AB17FDAC8DC912A65949829 /* Build configuration list for PBXProject "PokerPotOdds" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4854A9622DC8497CA75F92A6 /* Debug */,
+				9FC855CE1141488A1AECF7AE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 4873A681E02301A8997FA704 /* Project object */;
+}

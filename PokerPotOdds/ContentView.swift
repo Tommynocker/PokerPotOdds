@@ -1,0 +1,423 @@
+import SwiftUI
+
+// MARK: - Model
+
+enum Suit: Int, CaseIterable, Identifiable {
+    case spades, hearts, diamonds, clubs
+    var id: Int { rawValue }
+
+    var symbol: String {
+        switch self {
+        case .spades: return "♠"
+        case .hearts: return "♥"
+        case .diamonds: return "♦"
+        case .clubs: return "♣"
+        }
+    }
+
+    var isRed: Bool { self == .hearts || self == .diamonds }
+}
+
+enum Rank: Int, CaseIterable, Identifiable {
+    case two = 2, three, four, five, six, seven, eight, nine, ten
+    case jack, queen, king, ace
+    var id: Int { rawValue }
+
+    var label: String {
+        switch self {
+        case .two: return "2"
+        case .three: return "3"
+        case .four: return "4"
+        case .five: return "5"
+        case .six: return "6"
+        case .seven: return "7"
+        case .eight: return "8"
+        case .nine: return "9"
+        case .ten: return "T"
+        case .jack: return "J"
+        case .queen: return "Q"
+        case .king: return "K"
+        case .ace: return "A"
+        }
+    }
+}
+
+struct Card: Hashable, Identifiable {
+    let rank: Rank
+    let suit: Suit
+
+    var id: String { "\(rank.rawValue)-\(suit.rawValue)" }
+
+    var short: String { "\(rank.label)\(suit.symbol)" }
+}
+
+// MARK: - UI
+
+struct CardInputScreen: View {
+    // Slots
+    @State private var hero: [Card?] = [nil, nil]             // 2 hole cards
+    @State private var board: [Card?] = [nil, nil, nil, nil, nil] // 5 board cards
+    @State private var opponents: Int = 1 // number of opponents (Mitspieler außer dir)
+
+    @State private var currentIndex: Int = 0 // 0..6 -> hero[0], hero[1], board[0..4]
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 16) {
+                    headerSection
+
+                    slotSection
+
+                    Divider()
+
+                    cardGridSection
+                }
+                .padding()
+            }
+            .navigationTitle("Texas Hold'em Input")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Reset") { resetAll() }
+                }
+            }
+        }
+    }
+
+    // MARK: Header
+
+    private var headerSection: some View {
+        VStack(spacing: 12) {
+            HStack {
+                Text("Mitspieler (Gegner)")
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Stepper(value: $opponents, in: 1...8) {
+                    Text("\(opponents)")
+                        .monospacedDigit()
+                        .frame(minWidth: 24, alignment: .trailing)
+                }
+            }
+        }
+    }
+
+    // MARK: Slots
+
+    private var slotSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Deine Hand")
+                .font(.headline)
+
+            HStack(spacing: 12) {
+                slotView(title: "Hand 1", card: hero[0], isSelected: currentIndex == 0) {
+                    currentIndex = 0
+                }
+                slotView(title: "Hand 2", card: hero[1], isSelected: currentIndex == 1) {
+                    currentIndex = 1
+                }
+            }
+            if let prob = continueProbability(hero: hero, opponents: opponents, board: board) {
+                HStack(spacing: 8) {
+                    Label("Weitermachen? (\(streetTitle(for: board)))", systemImage: "hand.point.right.fill")
+                        .labelStyle(.titleAndIcon)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Text(String(format: "%.0f%%", prob))
+                        .font(.headline)
+                        .monospacedDigit()
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(
+                            Capsule().fill(prob >= 60 ? Color.green.opacity(0.2) : (prob >= 40 ? Color.orange.opacity(0.2) : Color.red.opacity(0.2)))
+                        )
+                        .overlay(
+                            Capsule().stroke(prob >= 60 ? Color.green : (prob >= 40 ? Color.orange : Color.red), lineWidth: 1)
+                        )
+                    Text(prob >= 60 ? "Ja" : (prob >= 40 ? "Grenzfall" : "Eher nein"))
+                        .font(.subheadline)
+                        .foregroundStyle(prob >= 60 ? .green : (prob >= 40 ? .orange : .red))
+                }
+                .animation(.easeInOut(duration: 0.2), value: board.compactMap { $0 }.count)
+                .animation(.easeInOut(duration: 0.2), value: prob)
+            }
+
+            Text("Board")
+                .font(.headline)
+                .padding(.top, 4)
+
+            HStack(spacing: 10) {
+                slotView(title: "F1", card: board[0], isSelected: currentIndex == 2) { currentIndex = 2 }
+                slotView(title: "F2", card: board[1], isSelected: currentIndex == 3) { currentIndex = 3 }
+                slotView(title: "F3", card: board[2], isSelected: currentIndex == 4) { currentIndex = 4 }
+                slotView(title: "T",  card: board[3], isSelected: currentIndex == 5) { currentIndex = 5 }
+                slotView(title: "R",  card: board[4], isSelected: currentIndex == 6) { currentIndex = 6 }
+            }
+
+            // Quick clear actions
+            HStack(spacing: 10) {
+                Button("Hand löschen") { hero = [nil, nil] }
+                    .buttonStyle(.bordered)
+
+                Button("Board löschen") { board = [nil, nil, nil, nil, nil] }
+                    .buttonStyle(.bordered)
+
+                Spacer()
+            }
+        }
+    }
+
+    private func slotView(title: String, card: Card?, isSelected: Bool, onTap: @escaping () -> Void) -> some View {
+        Button(action: onTap) {
+            VStack(spacing: 6) {
+                Text(title)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Text(card?.short ?? "—")
+                    .font(.title3)
+                    .monospacedDigit()
+                    .foregroundStyle(card?.suit.isRed == true ? .red : .primary)
+            }
+            .frame(width: 62, height: 74)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color(.secondarySystemBackground))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(isSelected ? Color.accentColor : Color.clear, lineWidth: 2)
+            )
+        }
+        .contextMenu {
+            Button(role: .destructive) {
+                removeCardFromSlot(title: title)
+            } label: {
+                Label("Slot leeren", systemImage: "trash")
+            }
+        }
+    }
+
+    private func removeCardFromSlot(title: String) {
+        // Map the visible title to the slot index
+        switch title {
+        case "Hand 1": hero[0] = nil
+        case "Hand 2": hero[1] = nil
+        case "F1": board[0] = nil
+        case "F2": board[1] = nil
+        case "F3": board[2] = nil
+        case "T": board[3] = nil
+        case "R": board[4] = nil
+        default: break
+        }
+    }
+
+    // MARK: Card Grid
+
+    private var cardGridSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Karten auswählen")
+                .font(.headline)
+
+            let cols = Array(repeating: GridItem(.flexible(), spacing: 8), count: 8)
+
+            LazyVGrid(columns: cols, spacing: 8) {
+                ForEach(allCards(), id: \.self) { card in
+                    cardButton(card)
+                }
+            }
+            .padding(.vertical, 6)
+        }
+    }
+
+    private func cardButton(_ card: Card) -> some View {
+        let used = usedCards()
+        let isUsed = used.contains(card)
+
+        return Button {
+            handleCardTap(card)
+        } label: {
+            Text(card.short)
+                .font(.subheadline)
+                .monospacedDigit()
+                .frame(maxWidth: .infinity, minHeight: 38)
+                .foregroundStyle(
+                    isUsed
+                    ? (card.suit.isRed ? Color.red.opacity(0.5) : Color.secondary)
+                    : (card.suit.isRed ? Color.red : Color.primary)
+                )
+                .background(
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(isUsed ? Color(.tertiarySystemFill) : Color(.secondarySystemBackground))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(isUsed ? Color(.quaternaryLabel) : Color.clear, lineWidth: 1)
+                )
+                .opacity(isUsed ? 0.6 : 1.0)
+        }
+        .disabled(isUsed && !isCardCurrentlyInAnySlot(card)) // only allow tap to remove if it is in a slot
+        .contextMenu {
+            if isCardCurrentlyInAnySlot(card) {
+                Button(role: .destructive) {
+                    removeCardEverywhere(card)
+                } label: {
+                    Label("Entfernen", systemImage: "xmark.circle")
+                }
+            }
+        }
+    }
+
+    // MARK: Tap Logic
+
+    private func handleCardTap(_ card: Card) {
+        // If already in any slot -> remove it
+        if isCardCurrentlyInAnySlot(card) {
+            withAnimation(.easeInOut(duration: 0.2)) {
+                removeCardEverywhere(card)
+            }
+            return
+        }
+
+        // Place in current slot and advance to next free slot
+        withAnimation(.easeInOut(duration: 0.2)) {
+            placeInCurrentSlot(card)
+            advanceToNextFreeSlot()
+        }
+    }
+
+    private func placeInCurrentSlot(_ card: Card) {
+        switch currentIndex {
+        case 0: hero[0] = card
+        case 1: hero[1] = card
+        case 2: board[0] = card
+        case 3: board[1] = card
+        case 4: board[2] = card
+        case 5: board[3] = card
+        case 6: board[4] = card
+        default: break
+        }
+    }
+
+    private func advanceToNextFreeSlot() {
+        // define order of slots indices 0..6
+        let slots: [Card?] = [hero[0], hero[1], board[0], board[1], board[2], board[3], board[4]]
+        // start searching from next index
+        var idx = currentIndex + 1
+        // wrap around once
+        for _ in 0..<slots.count {
+            if idx >= slots.count { idx = 0 }
+            if (idx == 0 && hero[0] == nil) { currentIndex = 0; return }
+            if (idx == 1 && hero[1] == nil) { currentIndex = 1; return }
+            if (idx == 2 && board[0] == nil) { currentIndex = 2; return }
+            if (idx == 3 && board[1] == nil) { currentIndex = 3; return }
+            if (idx == 4 && board[2] == nil) { currentIndex = 4; return }
+            if (idx == 5 && board[3] == nil) { currentIndex = 5; return }
+            if (idx == 6 && board[4] == nil) { currentIndex = 6; return }
+            idx += 1
+        }
+        // if all filled, keep pointing to last (river)
+        currentIndex = 6
+    }
+
+    private func placeInNextFreeSlot(_ card: Card) {
+        if hero[0] == nil { hero[0] = card; advanceToNextFreeSlot(); return }
+        if hero[1] == nil { hero[1] = card; advanceToNextFreeSlot(); return }
+        for i in 0..<board.count where board[i] == nil {
+            board[i] = card
+            advanceToNextFreeSlot()
+            return
+        }
+        // If everything is filled, overwrite the last board card (simple behavior)
+        board[4] = card
+        advanceToNextFreeSlot()
+    }
+
+    private func removeCardEverywhere(_ card: Card) {
+        if hero[0] == card { hero[0] = nil }
+        if hero[1] == card { hero[1] = nil }
+        for i in 0..<board.count where board[i] == card {
+            board[i] = nil
+        }
+        advanceToNextFreeSlot()
+    }
+
+    private func isCardCurrentlyInAnySlot(_ card: Card) -> Bool {
+        hero.contains(card) || board.contains(card)
+    }
+
+    private func usedCards() -> Set<Card> {
+        var s = Set<Card>()
+        for c in hero.compactMap({ $0 }) { s.insert(c) }
+        for c in board.compactMap({ $0 }) { s.insert(c) }
+        return s
+    }
+
+    private func allCards() -> [Card] {
+        var cards: [Card] = []
+        for suit in Suit.allCases {
+            for rank in Rank.allCases {
+                cards.append(Card(rank: rank, suit: suit))
+            }
+        }
+        // Optional: Sort by rank then suit for nicer grid
+        cards.sort { (a, b) in
+            if a.rank.rawValue != b.rank.rawValue { return a.rank.rawValue > b.rank.rawValue }
+            return a.suit.rawValue < b.suit.rawValue
+        }
+        return cards
+    }
+    
+    private func continueProbability(hero: [Card?], opponents: Int, board: [Card?]) -> Double? {
+        guard let c1 = hero[0], let c2 = hero[1] else { return nil }
+        // Very rough preflop-ish heuristic:
+        // Start with base score
+        var score: Double = 0
+        // Pair bonus
+        if c1.rank == c2.rank { score += 35 }
+        // High-card bonus
+        let highRanks: Set<Rank> = [.ace, .king, .queen, .jack, .ten]
+        if highRanks.contains(c1.rank) { score += 10 }
+        if highRanks.contains(c2.rank) { score += 10 }
+        // Suited bonus
+        if c1.suit == c2.suit { score += 8 }
+        // Connectivity bonus (for connectors and one-gappers)
+        let gap = abs(c1.rank.rawValue - c2.rank.rawValue)
+        if gap == 1 { score += 6 } else if gap == 2 { score += 3 }
+
+        // Slightly scale down with more opponents
+        let oppFactor = max(1, min(8, opponents))
+        let adjusted = max(0, min(100, score * (1.0 - 0.05 * Double(oppFactor - 1))))
+
+        // If there's a board, nudge up a bit if we already have a pair with board ranks
+        if board.compactMap({ $0 }).contains(where: { $0.rank == c1.rank || $0.rank == c2.rank }) {
+            return min(100, adjusted + 5)
+        }
+        return adjusted
+    }
+
+    private func streetTitle(for board: [Card?]) -> String {
+        let count = board.compactMap { $0 }.count
+        switch count {
+        case 0: return "Preflop"
+        case 1...3: return "Flop"
+        case 4: return "Turn"
+        case 5: return "River"
+        default: return "Preflop"
+        }
+    }
+    
+    private func resetAll() {
+        withAnimation(.easeInOut(duration: 0.2)) {
+            hero = [nil, nil]
+            board = [nil, nil, nil, nil, nil]
+            opponents = 1
+            currentIndex = 0
+        }
+    }
+}
+
+// MARK: - Preview
+
+#Preview {
+    CardInputScreen()
+}
