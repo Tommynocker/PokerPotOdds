@@ -26,6 +26,7 @@ struct CardInputScreen: View {
     @State private var showingPokerHandsSheet = false
     
     @State private var simulatedTop: [PrognosisItem] = []
+    @State private var isSimulating: Bool = false
 
     var body: some View {
         NavigationStack {
@@ -102,10 +103,6 @@ struct CardInputScreen: View {
 
                     if let cls = classifyHand(hero: hero, opponents: max(1, opponents - foldedOpponents)) {
                         VStack(alignment: .leading, spacing: 6) {
-                            Text("Hand-Klasse")
-                                .font(.headline)
-                                .foregroundStyle(.secondary)
-
                             // Zeile mit farbiger Klassifizierung
                             Text(cls.rawValue)
                                 .font(.subheadline)
@@ -115,10 +112,7 @@ struct CardInputScreen: View {
                                 .overlay(Capsule().stroke(handClassColor(cls), lineWidth: 1))
                                 .foregroundStyle(handClassColor(cls))
 
-                            let isPlayable = (cls == .premium || cls == .strong || cls == .playable)
-                            Text(isPlayable ? "Spielbar" : "Nicht spielbar")
-                                .font(.subheadline)
-                                .foregroundStyle(isPlayable ? .green : .red)
+                          
                         }
                         .transition(.opacity)
                         .animation(.easeInOut(duration: 0.2), value: cls)
@@ -143,29 +137,53 @@ struct CardInputScreen: View {
                     }
                     .buttonStyle(.plain)
 
-                    if !simulatedTop.isEmpty {
-                        ForEach(simulatedTop) { item in
-                            HStack(spacing: 8) {
-                                Circle()
-                                    .fill(item.color)
-                                    .frame(width: 8, height: 8)
-                                Text(item.title)
-                                    .font(.subheadline)
-                                    .foregroundStyle(.primary)
-                                Spacer()
-                                Text(String(format: "%.1f%%", item.percent))
-                                    .font(.subheadline)
-                                    .monospacedDigit()
-                                    .foregroundStyle(.primary)
+                    VStack(alignment: .leading, spacing: 0) {
+                        if isSimulating {
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack(spacing: 8) {
+                                    ProgressView()
+                                        .scaleEffect(0.8)
+                                    Text("Berechne…")
+                                        .font(.subheadline)
+                                        .foregroundStyle(.secondary)
+                                }
+                                ZStack {
+                                    RoundedRectangle(cornerRadius: 6)
+                                        .fill(Color(.tertiarySystemFill))
+                                        .frame(height: 10)
+                                    ShimmerView()
+                                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                                        .frame(height: 10)
+                                        .opacity(0.7)
+                                }
                             }
                             .padding(.vertical, 4)
+                        } else if !simulatedTop.isEmpty {
+                            ForEach(simulatedTop) { item in
+                                HStack(spacing: 8) {
+                                    Circle()
+                                        .fill(item.color)
+                                        .frame(width: 12, height: 12)
+                                    Text(item.title)
+                                        .font(.subheadline)
+                                        .foregroundStyle(.primary)
+                                    Spacer()
+                                    Text(String(format: "%.1f%%", item.percent))
+                                        .font(.subheadline)
+                                        .monospacedDigit()
+                                        .foregroundStyle(.primary)
+                                }
+                                .padding(.vertical, 4)
+                            }
+                        } else {
+                            Text("–")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
                         }
-                    } else {
-                        Text("–")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
                     }
+                    .frame(minHeight: 110)
                 }
+                .padding(.leading, 12)
             }
 
             Text("Board")
@@ -393,6 +411,14 @@ struct CardInputScreen: View {
         return cards
     }
     
+    private func pokerHandColorLookup() -> [String: Color] {
+        Dictionary(uniqueKeysWithValues: allPokerHands.map { ($0.title, $0.color) })
+    }
+
+    private func colorForHandTitle(_ title: String) -> Color {
+        pokerHandColorLookup()[title] ?? .primary
+    }
+
     private struct PrognosisItem: Identifiable {
         let id = UUID()
         let title: String
@@ -406,16 +432,16 @@ struct CardInputScreen: View {
         
         let items = allPokerHands.map { hand in
             let pct = pokerHandProbability(for: hand.title, hero: hero, board: board, opponents: max(1, opponents - foldedOpponents), foldedOpponents: foldedOpponents)
-            return PrognosisItem(title: hand.title, percent: pct, color: hand.color)
+            return PrognosisItem(title: hand.title, percent: pct, color: colorForHandTitle(hand.title))
         }
         
-        let top = items.sorted { $0.percent > $1.percent }.prefix(3)
+        let top = items.sorted { $0.percent > $1.percent }.prefix(4)
         return Array(top)
     }
     
     private func runMonteCarloPrognosis() {
         let heroCards = hero.compactMap { $0 }
-        guard heroCards.count == 2 else { simulatedTop = []; return }
+        guard heroCards.count == 2 else { simulatedTop = []; isSimulating = false; return }
         let boardCards = board.compactMap { $0 }
         let activeOpponents = max(1, opponents - foldedOpponents)
         let iterations: Int
@@ -425,6 +451,8 @@ struct CardInputScreen: View {
         case 4: iterations = 6000
         default: iterations = 4000
         }
+        isSimulating = true
+        simulatedTop = []
         Task { @MainActor in
             var rng: any RandomNumberGenerator = SystemRandomNumberGenerator()
             let simulator = PokerSimulator()
@@ -444,15 +472,16 @@ struct CardInputScreen: View {
                 (.onePair, "Ein Paar"),
                 (.highCard, "Hohe Karte")
             ]
-            let colorByTitle: [String: Color] = Dictionary(uniqueKeysWithValues: allPokerHands.map { ($0.title, $0.color) })
+            let colorByTitle = pokerHandColorLookup()
             var items: [PrognosisItem] = []
             for (cat, title) in mapping {
                 let count = result.handCategoryCounts[cat] ?? 0
                 let pct = 100.0 * Double(count) / Double(total)
-                let color = colorByTitle[title] ?? .primary
+                let color = colorForHandTitle(title)
                 items.append(PrognosisItem(title: title, percent: pct, color: color))
             }
-            simulatedTop = Array(items.sorted { $0.percent > $1.percent }.prefix(3))
+            simulatedTop = Array(items.sorted { $0.percent > $1.percent }.prefix(4))
+            isSimulating = false
         }
     }
     
@@ -641,6 +670,40 @@ struct CardInputScreen: View {
             currentIndex = 0
             manualDeadOuts = 0
         }
+    }
+}
+
+private struct ShimmerView: View {
+    @State private var phase: CGFloat = -1
+
+    var body: some View {
+        LinearGradient(
+            gradient: Gradient(colors: [
+                Color(.systemFill).opacity(0.3),
+                Color.white.opacity(0.6),
+                Color(.systemFill).opacity(0.3)
+            ]),
+            startPoint: .leading,
+            endPoint: .trailing
+        )
+        .mask(
+            Rectangle()
+                .fill(Color.white)
+        )
+        .modifier(ShimmerAnimation(phase: phase))
+        .onAppear {
+            withAnimation(.linear(duration: 1.2).repeatForever(autoreverses: false)) {
+                phase = 2
+            }
+        }
+    }
+}
+
+private struct ShimmerAnimation: ViewModifier {
+    let phase: CGFloat
+    func body(content: Content) -> some View {
+        content
+            .offset(x: UIScreen.main.bounds.width * phase)
     }
 }
 
