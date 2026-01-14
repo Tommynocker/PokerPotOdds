@@ -60,6 +60,8 @@ struct CardInputScreen: View {
     @State private var opponents: Int = 1 // number of opponents (Mitspieler außer dir)
 
     @State private var currentIndex: Int = 0 // 0..6 -> hero[0], hero[1], board[0..4]
+    @State private var manualDeadOuts: Int = 0 // zusätzliche Outs, die raus sind (durch gegnerische Karten etc.)
+    @State private var foldedOpponents: Int = 0 // Mitspieler, die bereits ausgestiegen sind
 
     var body: some View {
         NavigationStack {
@@ -89,7 +91,7 @@ struct CardInputScreen: View {
     private var headerSection: some View {
         VStack(spacing: 12) {
             HStack {
-                Text("Mitspieler (Gegner)")
+                Text("Mitspieler")
                     .foregroundStyle(.secondary)
                 Spacer()
                 Stepper(value: $opponents, in: 1...8) {
@@ -97,6 +99,48 @@ struct CardInputScreen: View {
                         .monospacedDigit()
                         .frame(minWidth: 24, alignment: .trailing)
                 }
+            }
+            HStack {
+                Text("Aussteiger")
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Stepper(value: $foldedOpponents, in: 0...max(0, opponents)) {
+                    HStack(spacing: 6) {
+                        Text("Aktiv: \(max(1, opponents - foldedOpponents))")
+                            .monospacedDigit()
+                        Text("von \(opponents)")
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+            if let outs = availableOuts(hero: hero, board: board) {
+                VStack(spacing: 6) {
+                    HStack {
+                        Label("Outs (nächste Karte)", systemImage: "bolt.circle")
+                            .labelStyle(.titleAndIcon)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        Text("verfügbar: \(outs.available)")
+                            .font(.subheadline)
+                            .foregroundStyle(.primary)
+                        Text("(raus: \(outs.dead)/\(outs.baseline))")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
+                    HStack {
+                        Text("Manuell raus:")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        Stepper(value: $manualDeadOuts, in: 0...max(0, outs.baseline)) {
+                            Text("\(manualDeadOuts)")
+                                .monospacedDigit()
+                        }
+                        .labelsHidden()
+                    }
+                }
+                .transition(.opacity)
             }
         }
     }
@@ -116,7 +160,25 @@ struct CardInputScreen: View {
                     currentIndex = 1
                 }
             }
-            if let prob = continueProbability(hero: hero, opponents: opponents, board: board) {
+            if let cls = classifyHand(hero: hero, opponents: max(1, opponents - foldedOpponents)) {
+                HStack {
+                    Label("Hand-Klasse", systemImage: "star.circle.fill")
+                        .labelStyle(.titleAndIcon)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Text(cls.rawValue)
+                        .font(.headline)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 4)
+                        .background(Capsule().fill(handClassColor(cls).opacity(0.15)))
+                        .overlay(Capsule().stroke(handClassColor(cls), lineWidth: 1))
+                        .foregroundStyle(handClassColor(cls))
+                }
+                .transition(.opacity)
+                .animation(.easeInOut(duration: 0.2), value: cls)
+            }
+            if let prob = continueProbability(hero: hero, opponents: max(1, opponents - foldedOpponents), board: board) {
                 HStack(spacing: 8) {
                     Label("Weitermachen? (\(streetTitle(for: board)))", systemImage: "hand.point.right.fill")
                         .labelStyle(.titleAndIcon)
@@ -386,13 +448,21 @@ struct CardInputScreen: View {
 
         // Slightly scale down with more opponents
         let oppFactor = max(1, min(8, opponents))
-        let adjusted = max(0, min(100, score * (1.0 - 0.05 * Double(oppFactor - 1))))
+        var adjusted = max(0, min(100, score * (1.0 - 0.05 * Double(oppFactor - 1))))
+
+        // Adjust by available outs vs baseline (if many outs are dead, reduce slightly)
+        if let outs = availableOuts(hero: hero, board: board) {
+            if outs.baseline > 0 {
+                let ratio = Double(outs.available) / Double(outs.baseline)
+                adjusted = adjusted * (0.8 + 0.2 * ratio)
+            }
+        }
 
         // If there's a board, nudge up a bit if we already have a pair with board ranks
         if board.compactMap({ $0 }).contains(where: { $0.rank == c1.rank || $0.rank == c2.rank }) {
-            return min(100, adjusted + 5)
+            adjusted = min(100, adjusted + 5)
         }
-        return adjusted
+        return max(0, min(100, adjusted))
     }
 
     private func streetTitle(for board: [Card?]) -> String {
@@ -406,12 +476,143 @@ struct CardInputScreen: View {
         }
     }
     
+    private enum HandClass: String {
+        case premium = "Premium"
+        case strong = "Stark"
+        case playable = "Spielbar"
+        case weak = "Schwach"
+    }
+
+    private func classifyHand(hero: [Card?], opponents: Int) -> HandClass? {
+        guard let c1 = hero[0], let c2 = hero[1] else { return nil }
+        let r1 = c1.rank.rawValue
+        let r2 = c2.rank.rawValue
+        let highRanks: Set<Rank> = [.ace, .king, .queen, .jack, .ten]
+        let suited = c1.suit == c2.suit
+        let pair = c1.rank == c2.rank
+        let maxR = max(r1, r2)
+        let minR = min(r1, r2)
+        let gap = abs(r1 - r2)
+
+        // Base classification
+        var base: HandClass
+        // Premium: AA, KK, QQ, AKs
+        if pair && (c1.rank == .ace || c1.rank == .king || c1.rank == .queen) {
+            base = .premium
+        } else if suited && ((c1.rank == .ace && c2.rank == .king) || (c1.rank == .king && c2.rank == .ace)) {
+            base = .premium
+        }
+        // Strong: JJ, TT, AQs, AJs, KQs, AK (offsuit)
+        else if pair && (c1.rank == .jack || c1.rank == .ten) {
+            base = .strong
+        } else if suited && ((highRanks.contains(c1.rank) && highRanks.contains(c2.rank)) && (maxR >= Rank.queen.rawValue)) {
+            base = .strong
+        } else if ( (c1.rank == .ace && c2.rank == .king) || (c1.rank == .king && c2.rank == .ace) ) {
+            base = .strong
+        }
+        // Playable: mittlere Paare 99–66, suited connectors/gapper (JTs, T9s, 98s, QJs), Ax suited
+        else if pair && (minR >= Rank.six.rawValue && maxR <= Rank.nine.rawValue) {
+            base = .playable
+        } else if suited && (gap <= 2) && (highRanks.contains(c1.rank) || highRanks.contains(c2.rank) || maxR >= Rank.nine.rawValue) {
+            base = .playable
+        } else if suited && (c1.rank == .ace || c2.rank == .ace) {
+            base = .playable
+        }
+        // Alles andere: schwach
+        else {
+            base = .weak
+        }
+
+        // Adjust for opponents: more opponents -> more conservative; very few -> slightly looser
+        let opp = max(1, min(8, opponents))
+        func shift(_ cls: HandClass, by delta: Int) -> HandClass {
+            let order: [HandClass] = [.weak, .playable, .strong, .premium]
+            guard let idx = order.firstIndex(of: cls) else { return cls }
+            let newIdx = max(0, min(order.count - 1, idx + delta))
+            return order[newIdx]
+        }
+
+        var adjusted = base
+        if opp >= 6 {
+            adjusted = shift(base, by: -1)
+        } else if opp <= 2 {
+            adjusted = shift(base, by: +1)
+        }
+        return adjusted
+    }
+
+    private func handClassColor(_ cls: HandClass) -> Color {
+        switch cls {
+        case .premium: return .green
+        case .strong: return .blue
+        case .playable: return .orange
+        case .weak: return .red
+        }
+    }
+    
+    private func allUsedCards() -> Set<Card> {
+        var s = Set<Card>()
+        for c in hero.compactMap({ $0 }) { s.insert(c) }
+        for c in board.compactMap({ $0 }) { s.insert(c) }
+        return s
+    }
+
+    // Very rough outs model: next-card improvement outs
+    private func estimateBaselineOutsForNextCard(hero: [Card?], board: [Card?]) -> Int? {
+        guard let c1 = hero[0], let c2 = hero[1] else { return nil }
+        let boardCount = board.compactMap { $0 }.count
+        // Preflop/Flop/Turn: consider next-card improvement
+        // If unpaired hand: 6 outs to pair (3 of each rank)
+        if c1.rank != c2.rank {
+            return 6
+        } else {
+            // Pocket pair: 2 outs to set on next card (2 remaining of that rank)
+            return 2
+        }
+    }
+
+    private func availableOuts(hero: [Card?], board: [Card?]) -> (baseline: Int, available: Int, dead: Int)? {
+        guard let c1 = hero[0], let c2 = hero[1] else { return nil }
+        guard let baseline = estimateBaselineOutsForNextCard(hero: hero, board: board) else { return nil }
+        let used = allUsedCards()
+
+        var outsCards = Set<Card>()
+        if c1.rank != c2.rank {
+            // 3 of each rank (other suits) for pairing either card
+            for s in Suit.allCases {
+                let card1 = Card(rank: c1.rank, suit: s)
+                let card2 = Card(rank: c2.rank, suit: s)
+                outsCards.insert(card1)
+                outsCards.insert(card2)
+            }
+            // remove the two hero cards themselves
+            outsCards.remove(c1)
+            outsCards.remove(c2)
+        } else {
+            // Pocket pair: 2 remaining of that rank (all suits minus the two we hold)
+            for s in Suit.allCases {
+                let card = Card(rank: c1.rank, suit: s)
+                outsCards.insert(card)
+            }
+            outsCards.remove(c1)
+            outsCards.remove(c2)
+        }
+
+        // Only next-card outs count; some may already be visible on board/hand (dead)
+        let autoDead = outsCards.filter { used.contains($0) }.count
+        let totalDead = autoDead + max(0, manualDeadOuts)
+        let available = max(0, baseline - totalDead)
+        return (baseline, available, totalDead)
+    }
+    
     private func resetAll() {
         withAnimation(.easeInOut(duration: 0.2)) {
             hero = [nil, nil]
             board = [nil, nil, nil, nil, nil]
             opponents = 1
+            foldedOpponents = 0
             currentIndex = 0
+            manualDeadOuts = 0
         }
     }
 }
@@ -421,3 +622,4 @@ struct CardInputScreen: View {
 #Preview {
     CardInputScreen()
 }
+
