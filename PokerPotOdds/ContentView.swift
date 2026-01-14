@@ -27,6 +27,8 @@ struct CardInputScreen: View {
     
     @State private var simulatedTop: [PrognosisItem] = []
     @State private var isSimulating: Bool = false
+    
+    @State private var improvementPercent: Double? = nil
 
     var body: some View {
         NavigationStack {
@@ -174,6 +176,23 @@ struct CardInputScreen: View {
                                         .foregroundStyle(.primary)
                                 }
                                 .padding(.vertical, 4)
+                            }
+                            if let imp = improvementPercent {
+                                Divider()
+                                    .padding(.vertical, 6)
+                                HStack(spacing: 8) {
+                                    Image(systemName: "arrow.up.right")
+                                        .foregroundStyle(.secondary)
+                                    Text("Verbesserungschance")
+                                        .font(.subheadline)
+                                        .foregroundStyle(.secondary)
+                                    Spacer()
+                                    Text(String(format: "%.1f%%", imp))
+                                        .font(.subheadline)
+                                        .monospacedDigit()
+                                        .foregroundStyle(.secondary)
+                                }
+                                .padding(.top, 2)
                             }
                         } else {
                             Text("–")
@@ -441,7 +460,7 @@ struct CardInputScreen: View {
     
     private func runMonteCarloPrognosis() {
         let heroCards = hero.compactMap { $0 }
-        guard heroCards.count == 2 else { simulatedTop = []; isSimulating = false; return }
+        guard heroCards.count == 2 else { simulatedTop = []; improvementPercent = nil; isSimulating = false; return }
         let boardCards = board.compactMap { $0 }
         let activeOpponents = max(1, opponents - foldedOpponents)
         let iterations: Int
@@ -480,6 +499,20 @@ struct CardInputScreen: View {
                 let color = colorForHandTitle(title)
                 items.append(PrognosisItem(title: title, percent: pct, color: color))
             }
+            
+            // Compute improvement chance: if we already have at least a pair now, sum categories strictly better than one pair; otherwise sum categories from one pair and above.
+            let havePairNow = currentlyAtLeastPair(hero: hero, board: board)
+            let percentByTitle: [String: Double] = Dictionary(uniqueKeysWithValues: items.map { ($0.title, $0.percent) })
+            func pct(_ title: String) -> Double { percentByTitle[title] ?? 0 }
+            let betterThanPairTitles = [
+                "Zwei Paare", "Drilling", "Straight", "Flush", "Full House", "Vierling", "Straight Flush", "Royal Flush"
+            ]
+            let atLeastPairTitles = [
+                "Ein Paar", "Zwei Paare", "Drilling", "Straight", "Flush", "Full House", "Vierling", "Straight Flush", "Royal Flush"
+            ]
+            let improvement = (havePairNow ? betterThanPairTitles : atLeastPairTitles).reduce(0.0) { $0 + pct($1) }
+            improvementPercent = improvement
+
             simulatedTop = Array(items.sorted { $0.percent > $1.percent }.prefix(4))
             isSimulating = false
         }
@@ -530,6 +563,12 @@ struct CardInputScreen: View {
         case 5: return "River"
         default: return "Preflop"
         }
+    }
+    
+    private func currentlyAtLeastPair(hero: [Card?], board: [Card?]) -> Bool {
+        let known = hero.compactMap { $0 } + board.compactMap { $0 }
+        let ranks = Dictionary(grouping: known, by: { $0.rank })
+        return ranks.values.contains(where: { $0.count >= 2 })
     }
     
     private enum HandClass: String {
