@@ -10,6 +10,7 @@
 		1C5DC4C4CBC23B717578278D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C03E1345F293269F65074E45 /* Assets.xcassets */; };
 		3F290F7D7453DB60D7B074B3 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C69F9604FA8B9A8A6D31CDF8 /* ContentView.swift */; };
 		67D318DB593AC61064B1537C /* Preview Content/Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4237E724E8AACAF9A39E2F60 /* Preview Content/Preview Assets.xcassets */; };
+		8755296E2F1814D900F06E49 /* CardEnums.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8755296D2F1814D900F06E49 /* CardEnums.swift */; };
 		DCBCF10B13B4EB3614A7ECB5 /* PokerPotOddsApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11D7B754C251DAC338418F15 /* PokerPotOddsApp.swift */; };
 /* End PBXBuildFile section */
 
@@ -18,6 +19,7 @@
 		4237E724E8AACAF9A39E2F60 /* Preview Content/Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Content/Preview Assets.xcassets"; sourceTree = "<group>"; };
 		54BAE0D6806F2B215DC0EB93 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		6C0DD639EF033F792E850740 /* PokerPotOdds.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; path = PokerPotOdds.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		8755296D2F1814D900F06E49 /* CardEnums.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardEnums.swift; sourceTree = "<group>"; };
 		C03E1345F293269F65074E45 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C69F9604FA8B9A8A6D31CDF8 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -49,9 +51,34 @@
 			);
 			sourceTree = "<group>";
 		};
+		8755296A2F18149D00F06E49 /* Model */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Model;
+			sourceTree = "<group>";
+		};
+		8755296B2F1814A300F06E49 /* View */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = View;
+			sourceTree = "<group>";
+		};
+		8755296C2F1814B600F06E49 /* Enum */ = {
+			isa = PBXGroup;
+			children = (
+				8755296D2F1814D900F06E49 /* CardEnums.swift */,
+			);
+			path = Enum;
+			sourceTree = "<group>";
+		};
 		E5D491A1E82DC6D93EBCE2A4 /* PokerPotOdds */ = {
 			isa = PBXGroup;
 			children = (
+				8755296C2F1814B600F06E49 /* Enum */,
+				8755296B2F1814A300F06E49 /* View */,
+				8755296A2F18149D00F06E49 /* Model */,
 				11D7B754C251DAC338418F15 /* PokerPotOddsApp.swift */,
 				C69F9604FA8B9A8A6D31CDF8 /* ContentView.swift */,
 				C03E1345F293269F65074E45 /* Assets.xcassets */,
@@ -131,6 +158,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8755296E2F1814D900F06E49 /* CardEnums.swift in Sources */,
 				DCBCF10B13B4EB3614A7ECB5 /* PokerPotOddsApp.swift in Sources */,
 				3F290F7D7453DB60D7B074B3 /* ContentView.swift in Sources */,
 			);

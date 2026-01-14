@@ -2,46 +2,6 @@ import SwiftUI
 
 // MARK: - Model
 
-enum Suit: Int, CaseIterable, Identifiable {
-    case spades, hearts, diamonds, clubs
-    var id: Int { rawValue }
-
-    var symbol: String {
-        switch self {
-        case .spades: return "♠"
-        case .hearts: return "♥"
-        case .diamonds: return "♦"
-        case .clubs: return "♣"
-        }
-    }
-
-    var isRed: Bool { self == .hearts || self == .diamonds }
-}
-
-enum Rank: Int, CaseIterable, Identifiable {
-    case two = 2, three, four, five, six, seven, eight, nine, ten
-    case jack, queen, king, ace
-    var id: Int { rawValue }
-
-    var label: String {
-        switch self {
-        case .two: return "2"
-        case .three: return "3"
-        case .four: return "4"
-        case .five: return "5"
-        case .six: return "6"
-        case .seven: return "7"
-        case .eight: return "8"
-        case .nine: return "9"
-        case .ten: return "T"
-        case .jack: return "J"
-        case .queen: return "Q"
-        case .king: return "K"
-        case .ace: return "A"
-        }
-    }
-}
-
 struct Card: Hashable, Identifiable {
     let rank: Rank
     let suit: Suit
@@ -129,62 +89,57 @@ struct CardInputScreen: View {
                         slotView(title: "Hand 1", card: hero[0], isSelected: currentIndex == 0) { currentIndex = 0 }
                         slotView(title: "Hand 2", card: hero[1], isSelected: currentIndex == 1) { currentIndex = 1 }
                     }
+
+                    if let cls = classifyHand(hero: hero, opponents: max(1, opponents - foldedOpponents)) {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("Hand-Klasse")
+                                .font(.headline)
+                                .foregroundStyle(.secondary)
+
+                            // Zeile mit farbiger Klassifizierung
+                            Text(cls.rawValue)
+                                .font(.subheadline)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 4)
+                                .background(Capsule().fill(handClassColor(cls).opacity(0.15)))
+                                .overlay(Capsule().stroke(handClassColor(cls), lineWidth: 1))
+                                .foregroundStyle(handClassColor(cls))
+
+                            let isPlayable = (cls == .premium || cls == .strong || cls == .playable)
+                            Text(isPlayable ? "Spielbar" : "Nicht spielbar")
+                                .font(.subheadline)
+                                .foregroundStyle(isPlayable ? .green : .red)
+                        }
+                        .transition(.opacity)
+                        .animation(.easeInOut(duration: 0.2), value: cls)
+                    }
                 }
 
                 Spacer(minLength: 0)
 
-                // Hand-Klasse Box rechts von "Deine Hand"
-                if let cls = classifyHand(hero: hero, opponents: max(1, opponents - foldedOpponents)) {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("Hand-Klasse")
-                            .font(.headline)
-                            .foregroundStyle(.secondary)
-
-                        // Zeile mit farbiger Klassifizierung
-                        Text(cls.rawValue)
-                            .font(.subheadline)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 4)
-                            .background(Capsule().fill(handClassColor(cls).opacity(0.15)))
-                            .overlay(Capsule().stroke(handClassColor(cls), lineWidth: 1))
-                            .foregroundStyle(handClassColor(cls))
-
-//                        // Darunter: ob spielbar
-                        let isPlayable = (cls == .premium || cls == .strong || cls == .playable)
-                        Text(isPlayable ? "Spielbar" : "Nicht spielbar")
-                            .font(.subheadline)
-                            .foregroundStyle(isPlayable ? .green : .red)
-                    }
-                    .frame(minWidth: 140, alignment: .leading)
-                    .transition(.opacity)
-                    .animation(.easeInOut(duration: 0.2), value: cls)
-                }
-            }
-
-            if let prob = continueProbability(hero: hero, opponents: max(1, opponents - foldedOpponents), board: board) {
-                HStack(spacing: 8) {
-                    Label("Weitermachen? (\(streetTitle(for: board)))", systemImage: "hand.point.right.fill")
-                        .labelStyle(.titleAndIcon)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                    Text(String(format: "%.0f%%", prob))
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Prognose")
                         .font(.headline)
-                        .monospacedDigit()
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(
-                            Capsule().fill(prob >= 60 ? Color.green.opacity(0.2) : (prob >= 40 ? Color.orange.opacity(0.2) : Color.red.opacity(0.2)))
-                        )
-                        .overlay(
-                            Capsule().stroke(prob >= 60 ? Color.green : (prob >= 40 ? Color.orange : Color.red), lineWidth: 1)
-                        )
-                    Text(prob >= 60 ? "Ja" : (prob >= 40 ? "Grenzfall" : "Eher nein"))
-                        .font(.subheadline)
-                        .foregroundStyle(prob >= 60 ? .green : (prob >= 40 ? .orange : .red))
+                        .foregroundStyle(.secondary)
+
+                    if let items = topThreePrognosis(hero: hero, board: board), !items.isEmpty {
+                        ForEach(items) { item in
+                            HStack {
+                                Text(item.title)
+                                    .font(.subheadline)
+                                Spacer()
+                                Text(String(format: "%.1f%%", item.percent))
+                                    .font(.subheadline)
+                                    .monospacedDigit()
+                            }
+                            .padding(.vertical, 4)
+                        }
+                    } else {
+                        Text("–")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
                 }
-                .animation(.easeInOut(duration: 0.2), value: board.compactMap { $0 }.count)
-                .animation(.easeInOut(duration: 0.2), value: prob)
             }
 
             Text("Board")
@@ -410,6 +365,73 @@ struct CardInputScreen: View {
             return a.suit.rawValue < b.suit.rawValue
         }
         return cards
+    }
+    
+    private struct PrognosisItem: Identifiable {
+        let id = UUID()
+        let title: String
+        let percent: Double
+    }
+
+    private func topThreePrognosis(hero: [Card?], board: [Card?]) -> [PrognosisItem]? {
+        guard let c1 = hero[0], let c2 = hero[1] else { return nil }
+        let used = allUsedCards()
+        let totalSeen = used.count
+        // Remaining cards in deck
+        let remaining = max(0, 52 - totalSeen)
+        guard remaining > 0 else { return nil }
+
+        var items: [PrognosisItem] = []
+
+        // 1) Paar mit einer Hole Card treffen (falls noch nicht gepaart auf dem Board)
+        if !board.compactMap({ $0 }).contains(where: { $0.rank == c1.rank }) {
+            // 3 Outs für c1-Rank, minus bereits gesehene
+            let outs = Suit.allCases.map { Card(rank: c1.rank, suit: $0) }.filter { !used.contains($0) && $0 != c1 && $0 != c2 }.count
+            let pct = 100.0 * Double(outs) / Double(remaining)
+            items.append(PrognosisItem(title: "Paar \(c1.rank.label)", percent: pct))
+        }
+        if !board.compactMap({ $0 }).contains(where: { $0.rank == c2.rank }) && c2.rank != c1.rank {
+            let outs = Suit.allCases.map { Card(rank: c2.rank, suit: $0) }.filter { !used.contains($0) && $0 != c1 && $0 != c2 }.count
+            let pct = 100.0 * Double(outs) / Double(remaining)
+            items.append(PrognosisItem(title: "Paar \(c2.rank.label)", percent: pct))
+        }
+
+        // 2) Suited-Verbesserung (eine weitere Karte in der gleichen Farbe)
+        if c1.suit == c2.suit {
+            // Anzahl verbleibender Karten dieser Farbe
+            let suitOuts = Rank.allCases.map { Card(rank: $0, suit: c1.suit) }.filter { !used.contains($0) }.count
+            // Abziehen der bereits gehaltenen 2 Karten
+            let outs = max(0, suitOuts - 2)
+            let pct = 100.0 * Double(outs) / Double(remaining)
+            items.append(PrognosisItem(title: "Farbe (+1 \(c1.suit.symbol))", percent: pct))
+        }
+
+        // 3) Straight-Verbesserung (grobe Näherung: Connector/One-Gapper trifft eine angrenzende Karte)
+        let gap = abs(c1.rank.rawValue - c2.rank.rawValue)
+        if gap == 1 || gap == 2 {
+            // Mögliche angrenzende Ränge
+            let low = min(c1.rank.rawValue, c2.rank.rawValue)
+            let high = max(c1.rank.rawValue, c2.rank.rawValue)
+            var candidateRanks: [Rank] = []
+            if let r = Rank(rawValue: low - 1) { candidateRanks.append(r) }
+            if let r = Rank(rawValue: high + 1) { candidateRanks.append(r) }
+            // Outs: 4 pro Rank (alle Suits), minus gesehene
+            var outs = 0
+            for r in candidateRanks {
+                for s in Suit.allCases {
+                    let card = Card(rank: r, suit: s)
+                    if !used.contains(card) { outs += 1 }
+                }
+            }
+            let pct = 100.0 * Double(outs) / Double(remaining)
+            if outs > 0 {
+                items.append(PrognosisItem(title: "Straight-Verbesserung", percent: pct))
+            }
+        }
+
+        // Sortiere nach Prozent und nimm die Top 3
+        let top = items.sorted { $0.percent > $1.percent }.prefix(3)
+        return Array(top)
     }
     
     private func continueProbability(hero: [Card?], opponents: Int, board: [Card?]) -> Double? {
