@@ -23,6 +23,8 @@ struct CardInputScreen: View {
     @State private var manualDeadOuts: Int = 0 // zusätzliche Outs, die raus sind (durch gegnerische Karten etc.)
     @State private var foldedOpponents: Int = 0 // Mitspieler, die bereits ausgestiegen sind
 
+    @State private var showingPokerHandsSheet = false
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -42,6 +44,9 @@ struct CardInputScreen: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Reset") { resetAll() }
                 }
+            }
+            .sheet(isPresented: $showingPokerHandsSheet) {
+                PokerHandsSheet(hero: hero, board: board, opponents: opponents, foldedOpponents: foldedOpponents)
             }
         }
     }
@@ -64,12 +69,10 @@ struct CardInputScreen: View {
                 Text("Aussteiger")
                     .foregroundStyle(.secondary)
                 Spacer()
-                Stepper(value: $foldedOpponents, in: 0...max(0, opponents)) {
+                Stepper(value: $foldedOpponents, in: 0...opponents) {
                     HStack(spacing: 6) {
-                        Text("Aktiv: \(max(1, opponents - foldedOpponents))")
+                        Text("\(foldedOpponents)")
                             .monospacedDigit()
-                        Text("von \(opponents)")
-                            .foregroundStyle(.secondary)
                     }
                 }
             }
@@ -118,9 +121,20 @@ struct CardInputScreen: View {
                 Spacer(minLength: 0)
 
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Prognose")
-                        .font(.headline)
-                        .foregroundStyle(.secondary)
+                    Button {
+                        showingPokerHandsSheet = true
+                    } label: {
+                        HStack(spacing: 6) {
+                            Text("Prognose")
+                                .font(.headline)
+                                .foregroundStyle(.secondary)
+                            Image(systemName: "chevron.up.square")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                                .opacity(0.7)
+                        }
+                    }
+                    .buttonStyle(.plain)
 
                     if let items = topThreePrognosis(hero: hero, board: board), !items.isEmpty {
                         ForEach(items) { item in
@@ -374,62 +388,14 @@ struct CardInputScreen: View {
     }
 
     private func topThreePrognosis(hero: [Card?], board: [Card?]) -> [PrognosisItem]? {
-        guard let c1 = hero[0], let c2 = hero[1] else { return nil }
-        let used = allUsedCards()
-        let totalSeen = used.count
-        // Remaining cards in deck
-        let remaining = max(0, 52 - totalSeen)
-        guard remaining > 0 else { return nil }
-
-        var items: [PrognosisItem] = []
-
-        // 1) Paar mit einer Hole Card treffen (falls noch nicht gepaart auf dem Board)
-        if !board.compactMap({ $0 }).contains(where: { $0.rank == c1.rank }) {
-            // 3 Outs für c1-Rank, minus bereits gesehene
-            let outs = Suit.allCases.map { Card(rank: c1.rank, suit: $0) }.filter { !used.contains($0) && $0 != c1 && $0 != c2 }.count
-            let pct = 100.0 * Double(outs) / Double(remaining)
-            items.append(PrognosisItem(title: "Paar \(c1.rank.label)", percent: pct))
+        let heroCards = hero.compactMap { $0 }
+        guard heroCards.count >= 2 else { return nil }
+        
+        let items = allPokerHands.map { hand in
+            let pct = pokerHandProbability(for: hand.title, hero: hero, board: board, opponents: max(1, opponents - foldedOpponents), foldedOpponents: foldedOpponents)
+            return PrognosisItem(title: hand.title, percent: pct)
         }
-        if !board.compactMap({ $0 }).contains(where: { $0.rank == c2.rank }) && c2.rank != c1.rank {
-            let outs = Suit.allCases.map { Card(rank: c2.rank, suit: $0) }.filter { !used.contains($0) && $0 != c1 && $0 != c2 }.count
-            let pct = 100.0 * Double(outs) / Double(remaining)
-            items.append(PrognosisItem(title: "Paar \(c2.rank.label)", percent: pct))
-        }
-
-        // 2) Suited-Verbesserung (eine weitere Karte in der gleichen Farbe)
-        if c1.suit == c2.suit {
-            // Anzahl verbleibender Karten dieser Farbe
-            let suitOuts = Rank.allCases.map { Card(rank: $0, suit: c1.suit) }.filter { !used.contains($0) }.count
-            // Abziehen der bereits gehaltenen 2 Karten
-            let outs = max(0, suitOuts - 2)
-            let pct = 100.0 * Double(outs) / Double(remaining)
-            items.append(PrognosisItem(title: "Farbe (+1 \(c1.suit.symbol))", percent: pct))
-        }
-
-        // 3) Straight-Verbesserung (grobe Näherung: Connector/One-Gapper trifft eine angrenzende Karte)
-        let gap = abs(c1.rank.rawValue - c2.rank.rawValue)
-        if gap == 1 || gap == 2 {
-            // Mögliche angrenzende Ränge
-            let low = min(c1.rank.rawValue, c2.rank.rawValue)
-            let high = max(c1.rank.rawValue, c2.rank.rawValue)
-            var candidateRanks: [Rank] = []
-            if let r = Rank(rawValue: low - 1) { candidateRanks.append(r) }
-            if let r = Rank(rawValue: high + 1) { candidateRanks.append(r) }
-            // Outs: 4 pro Rank (alle Suits), minus gesehene
-            var outs = 0
-            for r in candidateRanks {
-                for s in Suit.allCases {
-                    let card = Card(rank: r, suit: s)
-                    if !used.contains(card) { outs += 1 }
-                }
-            }
-            let pct = 100.0 * Double(outs) / Double(remaining)
-            if outs > 0 {
-                items.append(PrognosisItem(title: "Straight-Verbesserung", percent: pct))
-            }
-        }
-
-        // Sortiere nach Prozent und nimm die Top 3
+        
         let top = items.sorted { $0.percent > $1.percent }.prefix(3)
         return Array(top)
     }
