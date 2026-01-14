@@ -24,6 +24,8 @@ struct CardInputScreen: View {
     @State private var foldedOpponents: Int = 0 // Mitspieler, die bereits ausgestiegen sind
 
     @State private var showingPokerHandsSheet = false
+    
+    @State private var simulatedTop: [PrognosisItem] = []
 
     var body: some View {
         NavigationStack {
@@ -48,6 +50,11 @@ struct CardInputScreen: View {
             .sheet(isPresented: $showingPokerHandsSheet) {
                 PokerHandsSheet(hero: hero, board: board, opponents: opponents, foldedOpponents: foldedOpponents)
             }
+            .onChange(of: hero) { _ in runMonteCarloPrognosis() }
+            .onChange(of: board) { _ in runMonteCarloPrognosis() }
+            .onChange(of: opponents) { _ in runMonteCarloPrognosis() }
+            .onChange(of: foldedOpponents) { _ in runMonteCarloPrognosis() }
+            .onAppear { runMonteCarloPrognosis() }
         }
     }
 
@@ -136,8 +143,8 @@ struct CardInputScreen: View {
                     }
                     .buttonStyle(.plain)
 
-                    if let items = topThreePrognosis(hero: hero, board: board), !items.isEmpty {
-                        ForEach(items) { item in
+                    if !simulatedTop.isEmpty {
+                        ForEach(simulatedTop) { item in
                             HStack {
                                 Text(item.title)
                                     .font(.subheadline)
@@ -398,6 +405,47 @@ struct CardInputScreen: View {
         
         let top = items.sorted { $0.percent > $1.percent }.prefix(3)
         return Array(top)
+    }
+    
+    private func runMonteCarloPrognosis() {
+        let heroCards = hero.compactMap { $0 }
+        guard heroCards.count == 2 else { simulatedTop = []; return }
+        let boardCards = board.compactMap { $0 }
+        let activeOpponents = max(1, opponents - foldedOpponents)
+        let iterations: Int
+        switch boardCards.count {
+        case 0: iterations = 10000
+        case 1...3: iterations = 8000
+        case 4: iterations = 6000
+        default: iterations = 4000
+        }
+        Task { @MainActor in
+            var rng: any RandomNumberGenerator = SystemRandomNumberGenerator()
+            let simulator = PokerSimulator()
+            let result = await simulator.simulate(hero: hero, board: board, activeOpponents: activeOpponents, iterations: iterations, rng: &rng)
+            // Map counts to percentages and to the known display titles
+            let total = max(1, result.iterations)
+            // Map HandCategory to titles used in allPokerHands order
+            let mapping: [(HandCategory, String)] = [
+                (.royalFlush, "Royal Flush"),
+                (.straightFlush, "Straight Flush"),
+                (.fourOfAKind, "Vierling"),
+                (.fullHouse, "Full House"),
+                (.flush, "Flush"),
+                (.straight, "Straight"),
+                (.threeOfAKind, "Drilling"),
+                (.twoPair, "Zwei Paare"),
+                (.onePair, "Ein Paar"),
+                (.highCard, "Hohe Karte")
+            ]
+            var items: [PrognosisItem] = []
+            for (cat, title) in mapping {
+                let count = result.handCategoryCounts[cat] ?? 0
+                let pct = 100.0 * Double(count) / Double(total)
+                items.append(PrognosisItem(title: title, percent: pct))
+            }
+            simulatedTop = Array(items.sorted { $0.percent > $1.percent }.prefix(3))
+        }
     }
     
     private func continueProbability(hero: [Card?], opponents: Int, board: [Card?]) -> Double? {
