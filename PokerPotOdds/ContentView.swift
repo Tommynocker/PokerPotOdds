@@ -113,35 +113,6 @@ struct CardInputScreen: View {
                     }
                 }
             }
-            if let outs = availableOuts(hero: hero, board: board) {
-                VStack(spacing: 6) {
-                    HStack {
-                        Label("Outs (nächste Karte)", systemImage: "bolt.circle")
-                            .labelStyle(.titleAndIcon)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                        Spacer()
-                        Text("verfügbar: \(outs.available)")
-                            .font(.subheadline)
-                            .foregroundStyle(.primary)
-                        Text("(raus: \(outs.dead)/\(outs.baseline))")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                    }
-                    HStack {
-                        Text("Manuell raus:")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                        Spacer()
-                        Stepper(value: $manualDeadOuts, in: 0...max(0, outs.baseline)) {
-                            Text("\(manualDeadOuts)")
-                                .monospacedDigit()
-                        }
-                        .labelsHidden()
-                    }
-                }
-                .transition(.opacity)
-            }
         }
     }
 
@@ -149,35 +120,47 @@ struct CardInputScreen: View {
 
     private var slotSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Deine Hand")
-                .font(.headline)
-
-            HStack(spacing: 12) {
-                slotView(title: "Hand 1", card: hero[0], isSelected: currentIndex == 0) {
-                    currentIndex = 0
-                }
-                slotView(title: "Hand 2", card: hero[1], isSelected: currentIndex == 1) {
-                    currentIndex = 1
-                }
-            }
-            if let cls = classifyHand(hero: hero, opponents: max(1, opponents - foldedOpponents)) {
-                HStack {
-                    Label("Hand-Klasse", systemImage: "star.circle.fill")
-                        .labelStyle(.titleAndIcon)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                    Text(cls.rawValue)
+            HStack(alignment: .top, spacing: 24) {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Deine Hand")
                         .font(.headline)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 4)
-                        .background(Capsule().fill(handClassColor(cls).opacity(0.15)))
-                        .overlay(Capsule().stroke(handClassColor(cls), lineWidth: 1))
-                        .foregroundStyle(handClassColor(cls))
+
+                    HStack(spacing: 12) {
+                        slotView(title: "Hand 1", card: hero[0], isSelected: currentIndex == 0) { currentIndex = 0 }
+                        slotView(title: "Hand 2", card: hero[1], isSelected: currentIndex == 1) { currentIndex = 1 }
+                    }
                 }
-                .transition(.opacity)
-                .animation(.easeInOut(duration: 0.2), value: cls)
+
+                Spacer(minLength: 0)
+
+                // Hand-Klasse Box rechts von "Deine Hand"
+                if let cls = classifyHand(hero: hero, opponents: max(1, opponents - foldedOpponents)) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Hand-Klasse")
+                            .font(.headline)
+                            .foregroundStyle(.secondary)
+
+                        // Zeile mit farbiger Klassifizierung
+                        Text(cls.rawValue)
+                            .font(.subheadline)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 4)
+                            .background(Capsule().fill(handClassColor(cls).opacity(0.15)))
+                            .overlay(Capsule().stroke(handClassColor(cls), lineWidth: 1))
+                            .foregroundStyle(handClassColor(cls))
+
+//                        // Darunter: ob spielbar
+                        let isPlayable = (cls == .premium || cls == .strong || cls == .playable)
+                        Text(isPlayable ? "Spielbar" : "Nicht spielbar")
+                            .font(.subheadline)
+                            .foregroundStyle(isPlayable ? .green : .red)
+                    }
+                    .frame(minWidth: 140, alignment: .leading)
+                    .transition(.opacity)
+                    .animation(.easeInOut(duration: 0.2), value: cls)
+                }
             }
+
             if let prob = continueProbability(hero: hero, opponents: max(1, opponents - foldedOpponents), board: board) {
                 HStack(spacing: 8) {
                     Label("Weitermachen? (\(streetTitle(for: board)))", systemImage: "hand.point.right.fill")
