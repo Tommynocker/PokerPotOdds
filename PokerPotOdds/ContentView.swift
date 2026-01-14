@@ -134,10 +134,10 @@ struct CardInputScreen: View {
                         HStack(spacing: 6) {
                             Text("Prognose")
                                 .font(.headline)
-                                .foregroundStyle(.secondary)
-                            Image(systemName: "chevron.up.square")
+                                .foregroundStyle(.primary)
+                            Image(systemName: "arrow.up")
                                 .font(.subheadline)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(.primary)
                                 .opacity(0.7)
                         }
                     }
@@ -145,13 +145,18 @@ struct CardInputScreen: View {
 
                     if !simulatedTop.isEmpty {
                         ForEach(simulatedTop) { item in
-                            HStack {
+                            HStack(spacing: 8) {
+                                Circle()
+                                    .fill(item.color)
+                                    .frame(width: 8, height: 8)
                                 Text(item.title)
                                     .font(.subheadline)
+                                    .foregroundStyle(.primary)
                                 Spacer()
                                 Text(String(format: "%.1f%%", item.percent))
                                     .font(.subheadline)
                                     .monospacedDigit()
+                                    .foregroundStyle(.primary)
                             }
                             .padding(.vertical, 4)
                         }
@@ -392,6 +397,7 @@ struct CardInputScreen: View {
         let id = UUID()
         let title: String
         let percent: Double
+        let color: Color
     }
 
     private func topThreePrognosis(hero: [Card?], board: [Card?]) -> [PrognosisItem]? {
@@ -400,7 +406,7 @@ struct CardInputScreen: View {
         
         let items = allPokerHands.map { hand in
             let pct = pokerHandProbability(for: hand.title, hero: hero, board: board, opponents: max(1, opponents - foldedOpponents), foldedOpponents: foldedOpponents)
-            return PrognosisItem(title: hand.title, percent: pct)
+            return PrognosisItem(title: hand.title, percent: pct, color: hand.color)
         }
         
         let top = items.sorted { $0.percent > $1.percent }.prefix(3)
@@ -438,11 +444,13 @@ struct CardInputScreen: View {
                 (.onePair, "Ein Paar"),
                 (.highCard, "Hohe Karte")
             ]
+            let colorByTitle: [String: Color] = Dictionary(uniqueKeysWithValues: allPokerHands.map { ($0.title, $0.color) })
             var items: [PrognosisItem] = []
             for (cat, title) in mapping {
                 let count = result.handCategoryCounts[cat] ?? 0
                 let pct = 100.0 * Double(count) / Double(total)
-                items.append(PrognosisItem(title: title, percent: pct))
+                let color = colorByTitle[title] ?? .primary
+                items.append(PrognosisItem(title: title, percent: pct, color: color))
             }
             simulatedTop = Array(items.sorted { $0.percent > $1.percent }.prefix(3))
         }
