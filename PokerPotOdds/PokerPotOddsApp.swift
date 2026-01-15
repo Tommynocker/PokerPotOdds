@@ -4,7 +4,7 @@ import SwiftUI
 struct PokerPotOddsApp: App {
     var body: some Scene {
         WindowGroup {
-            CardInputScreen()
+            ContentView()
         }
     }
 }
