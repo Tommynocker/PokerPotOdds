@@ -1,12 +1,4 @@
-//
-//  SimulationView.swift
-//  PokerPotOdds
-//
-//  Created by Thomas Rakowski on 15.01.26.
-//
-
 import SwiftUI
-
 
 // MARK: - Model
 
@@ -38,8 +30,6 @@ struct SimulationView: View {
     
     @State private var improvementPercent: Double? = nil
 
-    @EnvironmentObject private var simulationManager: SimulationManager
-
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -54,7 +44,7 @@ struct SimulationView: View {
                 }
                 .padding()
             }
-            .navigationTitle("Simulation")
+            .navigationTitle("Texas Hold'em Input")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Reset") { resetAll() }
@@ -63,11 +53,11 @@ struct SimulationView: View {
             .sheet(isPresented: $showingPokerHandsSheet) {
                 PokerHandsSheet(hero: hero, board: board, opponents: opponents, foldedOpponents: foldedOpponents)
             }
-            .onChange(of: hero) { _ in runSelectedPrognosis() }
-            .onChange(of: board) { _ in runSelectedPrognosis() }
-            .onChange(of: opponents) { _ in runSelectedPrognosis() }
-            .onChange(of: foldedOpponents) { _ in runSelectedPrognosis() }
-            .onAppear { runSelectedPrognosis() }
+            .onChange(of: hero) { _ in runMonteCarloPrognosis() }
+            .onChange(of: board) { _ in runMonteCarloPrognosis() }
+            .onChange(of: opponents) { _ in runMonteCarloPrognosis() }
+            .onChange(of: foldedOpponents) { _ in runMonteCarloPrognosis() }
+            .onAppear { runMonteCarloPrognosis() }
         }
     }
 
@@ -159,46 +149,49 @@ struct SimulationView: View {
                                         .font(.subheadline)
                                         .foregroundStyle(.secondary)
                                 }
-                                
+                                ZStack {
+                                    RoundedRectangle(cornerRadius: 6)
+                                        .fill(Color(.tertiarySystemFill))
+                                        .frame(height: 10)
+                                    ShimmerView()
+                                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                                        .frame(height: 10)
+                                        .opacity(0.7)
+                                }
                             }
                             .padding(.vertical, 4)
                         } else if !simulatedTop.isEmpty {
-                            let nonZeroItems = simulatedTop.filter { $0.percent > 0 }
-                            if nonZeroItems.isEmpty {
-                                Text("–")
-                                    .font(.subheadline)
-                                    .foregroundStyle(.secondary)
-                                    .padding(.vertical, 4)
-                            } else {
-                                ForEach(nonZeroItems) { item in
-                                    HStack(spacing: 8) {
-                                        Circle()
-                                            .fill(item.color)
-                                            .frame(width: 12, height: 12)
-                                        Text(item.title)
-                                            .font(.subheadline)
-                                            .foregroundStyle(.primary)
-                                        Spacer()
-                                        Text(String(format: "%.1f%%", item.percent))
-                                            .font(.subheadline)
-                                            .monospacedDigit()
-                                            .foregroundStyle(.primary)
-                                    }
-                                    .padding(.vertical, 4)
+                            ForEach(simulatedTop) { item in
+                                HStack(spacing: 8) {
+                                    Circle()
+                                        .fill(item.color)
+                                        .frame(width: 12, height: 12)
+                                    Text(item.title)
+                                        .font(.subheadline)
+                                        .foregroundStyle(.primary)
+                                    Spacer()
+                                    Text(String(format: "%.1f%%", item.percent))
+                                        .font(.subheadline)
+                                        .monospacedDigit()
+                                        .foregroundStyle(.primary)
                                 }
+                                .padding(.vertical, 4)
                             }
-                            if let imp = improvementPercent, imp > 0 {
+                            if let imp = improvementPercent {
                                 Divider()
                                     .padding(.vertical, 6)
                                 HStack(spacing: 8) {
                                     Image(systemName: "arrow.up.right")
-                                    Text("Chance")
+                                        .foregroundStyle(.secondary)
+                                    Text("VB")
+                                        .font(.subheadline)
+                                        .foregroundStyle(.secondary)
                                     Spacer()
                                     Text(String(format: "%.1f%%", imp))
                                         .font(.subheadline)
                                         .monospacedDigit()
-                                       
-                                }.foregroundStyle(.secondary)
+                                        .foregroundStyle(.secondary)
+                                }
                                 .padding(.top, 2)
                             }
                         } else {
@@ -207,7 +200,7 @@ struct SimulationView: View {
                                 .foregroundStyle(.secondary)
                         }
                     }
-                    .frame(minHeight: 110, alignment: .topLeading)
+                    .frame(minHeight: 110)
                 }
                 .padding(.leading, 12)
             }
@@ -226,10 +219,10 @@ struct SimulationView: View {
 
             // Quick clear actions
             HStack(spacing: 10) {
-                Button("Hand löschen") { hero = [nil, nil]; currentIndex = 0 }
+                Button("Hand löschen") { hero = [nil, nil] }
                     .buttonStyle(.bordered)
 
-                Button("Board löschen") { board = [nil, nil, nil, nil, nil]; currentIndex = 2 }
+                Button("Board löschen") { board = [nil, nil, nil, nil, nil] }
                     .buttonStyle(.bordered)
 
                 Spacer()
@@ -258,9 +251,6 @@ struct SimulationView: View {
                     .stroke(isSelected ? Color.accentColor : Color.clear, lineWidth: 2)
             )
         }
-        .onTapGesture(count: 2) {
-            removeCardFromSlot(title: title)
-        }
         .contextMenu {
             Button(role: .destructive) {
                 removeCardFromSlot(title: title)
@@ -273,13 +263,13 @@ struct SimulationView: View {
     private func removeCardFromSlot(title: String) {
         // Map the visible title to the slot index
         switch title {
-        case "Hand 1": hero[0] = nil; currentIndex = 0
-        case "Hand 2": hero[1] = nil; currentIndex = 1
-        case "F1": board[0] = nil; currentIndex = 2
-        case "F2": board[1] = nil; currentIndex = 3
-        case "F3": board[2] = nil; currentIndex = 4
-        case "T": board[3] = nil; currentIndex = 5
-        case "R": board[4] = nil; currentIndex = 6
+        case "Hand 1": hero[0] = nil
+        case "Hand 2": hero[1] = nil
+        case "F1": board[0] = nil
+        case "F2": board[1] = nil
+        case "F3": board[2] = nil
+        case "T": board[3] = nil
+        case "R": board[4] = nil
         default: break
         }
     }
@@ -307,7 +297,7 @@ struct SimulationView: View {
         let isUsed = used.contains(card)
 
         return Button {
-            if !isUsed { handleCardTap(card) }
+            handleCardTap(card)
         } label: {
             Text(card.short)
                 .font(.subheadline)
@@ -328,7 +318,16 @@ struct SimulationView: View {
                 )
                 .opacity(isUsed ? 0.6 : 1.0)
         }
-        .disabled(isUsed)
+        .disabled(isUsed && !isCardCurrentlyInAnySlot(card)) // only allow tap to remove if it is in a slot
+        .contextMenu {
+            if isCardCurrentlyInAnySlot(card) {
+                Button(role: .destructive) {
+                    removeCardEverywhere(card)
+                } label: {
+                    Label("Entfernen", systemImage: "xmark.circle")
+                }
+            }
+        }
     }
 
     // MARK: Tap Logic
@@ -459,7 +458,7 @@ struct SimulationView: View {
         return Array(top)
     }
     
-    private func runSelectedPrognosis() {
+    private func runMonteCarloPrognosis() {
         let heroCards = hero.compactMap { $0 }
         guard heroCards.count == 2 else { simulatedTop = []; improvementPercent = nil; isSimulating = false; return }
         let boardCards = board.compactMap { $0 }
@@ -473,53 +472,49 @@ struct SimulationView: View {
         }
         isSimulating = true
         simulatedTop = []
-
-        // Capture strategy on the main actor to avoid sending a non-Sendable existential into the Task
-        let strategy = simulationManager.strategy()
-
-        Task {
-            let result = await strategy.simulate(hero: hero, board: board, activeOpponents: activeOpponents, iterations: iterations)
-            await MainActor.run {
-                let total = max(1, result.iterations)
-                let mapping: Array<(HandCategory, String)> = [
-                    (.royalFlush, "Royal Flush"),
-                    (.straightFlush, "Straight Flush"),
-                    (.fourOfAKind, "Vierling"),
-                    (.fullHouse, "Full House"),
-                    (.flush, "Flush"),
-                    (.straight, "Straight"),
-                    (.threeOfAKind, "Drilling"),
-                    (.twoPair, "Zwei Paare"),
-                    (.onePair, "Ein Paar"),
-                    (.highCard, "Hohe Karte")
-                ]
-                var items: [PrognosisItem] = []
-                for (cat, title) in mapping {
-                    let count = result.handCategoryCounts[cat] ?? 0
-                    let pct = 100.0 * Double(count) / Double(total)
-                    let color = colorForHandTitle(title)
-                    items.append(PrognosisItem(title: title, percent: pct, color: color))
-                }
-                let havePairNow = currentlyAtLeastPair(hero: hero, board: board)
-                let knownBoardCount = board.compactMap { $0 }.count
-                if knownBoardCount == 5 {
-                    improvementPercent = 0
-                } else {
-                    let percentByTitle: [String: Double] = Dictionary(uniqueKeysWithValues: items.map { ($0.title, $0.percent) })
-                    func pct(_ title: String) -> Double { percentByTitle[title] ?? 0 }
-                    let betterThanPairTitles = [
-                        "Zwei Paare", "Drilling", "Straight", "Flush", "Full House", "Vierling", "Straight Flush", "Royal Flush"
-                    ]
-                    let atLeastPairTitles = [
-                        "Ein Paar", "Zwei Paare", "Drilling", "Straight", "Flush", "Full House", "Vierling", "Straight Flush", "Royal Flush"
-                    ]
-                    let improvement = (havePairNow ? betterThanPairTitles : atLeastPairTitles).reduce(0.0) { $0 + pct($1) }
-                    improvementPercent = improvement
-                }
-
-                simulatedTop = Array(items.filter { $0.percent > 0 }.sorted { $0.percent > $1.percent }.prefix(4))
-                isSimulating = false
+        Task { @MainActor in
+            var rng: any RandomNumberGenerator = SystemRandomNumberGenerator()
+            let simulator = PokerSimulator()
+            let result = await simulator.simulate(hero: hero, board: board, activeOpponents: activeOpponents, iterations: iterations, rng: &rng)
+            // Map counts to percentages and to the known display titles
+            let total = max(1, result.iterations)
+            // Map HandCategory to titles used in allPokerHands order
+            let mapping: [(HandCategory, String)] = [
+                (.royalFlush, "Royal Flush"),
+                (.straightFlush, "Straight Flush"),
+                (.fourOfAKind, "Vierling"),
+                (.fullHouse, "Full House"),
+                (.flush, "Flush"),
+                (.straight, "Straight"),
+                (.threeOfAKind, "Drilling"),
+                (.twoPair, "Zwei Paare"),
+                (.onePair, "Ein Paar"),
+                (.highCard, "Hohe Karte")
+            ]
+            let colorByTitle = pokerHandColorLookup()
+            var items: [PrognosisItem] = []
+            for (cat, title) in mapping {
+                let count = result.handCategoryCounts[cat] ?? 0
+                let pct = 100.0 * Double(count) / Double(total)
+                let color = colorForHandTitle(title)
+                items.append(PrognosisItem(title: title, percent: pct, color: color))
             }
+            
+            // Compute improvement chance: if we already have at least a pair now, sum categories strictly better than one pair; otherwise sum categories from one pair and above.
+            let havePairNow = currentlyAtLeastPair(hero: hero, board: board)
+            let percentByTitle: [String: Double] = Dictionary(uniqueKeysWithValues: items.map { ($0.title, $0.percent) })
+            func pct(_ title: String) -> Double { percentByTitle[title] ?? 0 }
+            let betterThanPairTitles = [
+                "Zwei Paare", "Drilling", "Straight", "Flush", "Full House", "Vierling", "Straight Flush", "Royal Flush"
+            ]
+            let atLeastPairTitles = [
+                "Ein Paar", "Zwei Paare", "Drilling", "Straight", "Flush", "Full House", "Vierling", "Straight Flush", "Royal Flush"
+            ]
+            let improvement = (havePairNow ? betterThanPairTitles : atLeastPairTitles).reduce(0.0) { $0 + pct($1) }
+            improvementPercent = improvement
+
+            simulatedTop = Array(items.sorted { $0.percent > $1.percent }.prefix(4))
+            isSimulating = false
         }
     }
     
@@ -755,7 +750,4 @@ private struct ShimmerAnimation: ViewModifier {
 
 #Preview {
     SimulationView()
-        .environmentObject(SimulationManager())
-    
 }
-
