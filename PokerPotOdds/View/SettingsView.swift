@@ -8,14 +8,59 @@ import SwiftUI
 
 
 struct SettingsView: View {
+    @EnvironmentObject private var simulationManager: SimulationManager
+    @AppStorage("selectedSimulationID") private var selectedSimulationID: String = ""
+    
+    private func idString(for kind: SimulationManager.StrategyKind) -> String {
+        // Prefer the Identifiable id if it's a String; else stringify it
+        if let stringID = kind.id as? String {
+            return stringID
+        } else {
+            return String(describing: kind.id)
+        }
+    }
+    
+    private func kind(for idString: String) -> SimulationManager.StrategyKind? {
+        SimulationManager.StrategyKind.allCases.first { candidate in
+            if let stringID = candidate.id as? String {
+                return stringID == idString
+            } else {
+                return String(describing: candidate.id) == idString
+            }
+        }
+    }
+    
     var body: some View {
         NavigationStack {
             Form {
                 Section("Allgemein") {
-                    Text("Einstellungen kommen hier hin.")
+                    Picker("Simulation", selection: $simulationManager.selected) {
+                        ForEach(SimulationManager.StrategyKind.allCases) { kind in
+                            Text(kind.displayName).tag(kind)
+                        }
+                    }
                 }
             }
             .navigationTitle("Settings")
+            .onAppear {
+                if let restored = kind(for: selectedSimulationID) {
+                    simulationManager.selected = restored
+                } else {
+                    // Fallback to a default value if none stored or not matched
+                    if let first = SimulationManager.StrategyKind.allCases.first {
+                        simulationManager.selected = first
+                        selectedSimulationID = idString(for: first)
+                    }
+                }
+            }
+            .onChange(of: simulationManager.selected) { newValue in
+                selectedSimulationID = idString(for: newValue)
+            }
         }
     }
 }
+#Preview {
+    SettingsView()
+        .environmentObject(SimulationManager())
+}
+

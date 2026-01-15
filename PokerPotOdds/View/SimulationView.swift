@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+
 // MARK: - Model
 
 struct Card: Hashable, Identifiable {
@@ -37,6 +38,8 @@ struct SimulationView: View {
     
     @State private var improvementPercent: Double? = nil
 
+    @EnvironmentObject private var simulationManager: SimulationManager
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -51,7 +54,7 @@ struct SimulationView: View {
                 }
                 .padding()
             }
-            .navigationTitle("Texas Hold'em Input")
+            .navigationTitle("Simulation")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Reset") { resetAll() }
@@ -60,11 +63,11 @@ struct SimulationView: View {
             .sheet(isPresented: $showingPokerHandsSheet) {
                 PokerHandsSheet(hero: hero, board: board, opponents: opponents, foldedOpponents: foldedOpponents)
             }
-            .onChange(of: hero) { _ in runMonteCarloPrognosis() }
-            .onChange(of: board) { _ in runMonteCarloPrognosis() }
-            .onChange(of: opponents) { _ in runMonteCarloPrognosis() }
-            .onChange(of: foldedOpponents) { _ in runMonteCarloPrognosis() }
-            .onAppear { runMonteCarloPrognosis() }
+            .onChange(of: hero) { _ in runSelectedPrognosis() }
+            .onChange(of: board) { _ in runSelectedPrognosis() }
+            .onChange(of: opponents) { _ in runSelectedPrognosis() }
+            .onChange(of: foldedOpponents) { _ in runSelectedPrognosis() }
+            .onAppear { runSelectedPrognosis() }
         }
     }
 
@@ -142,6 +145,15 @@ struct SimulationView: View {
                                 .font(.subheadline)
                                 .foregroundStyle(.primary)
                                 .opacity(0.7)
+                            Text("•")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                                .opacity(0.6)
+                            Text(simulationManager.selected.displayName)
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                                .truncationMode(.tail)
                         }
                     }
                     .buttonStyle(.plain)
@@ -454,7 +466,7 @@ struct SimulationView: View {
         return Array(top)
     }
     
-    private func runMonteCarloPrognosis() {
+    private func runSelectedPrognosis() {
         let heroCards = hero.compactMap { $0 }
         guard heroCards.count == 2 else { simulatedTop = []; improvementPercent = nil; isSimulating = false; return }
         let boardCards = board.compactMap { $0 }
@@ -468,49 +480,48 @@ struct SimulationView: View {
         }
         isSimulating = true
         simulatedTop = []
-        Task { @MainActor in
-            var rng: any RandomNumberGenerator = SystemRandomNumberGenerator()
-            let simulator = PokerSimulator()
-            let result = await simulator.simulate(hero: hero, board: board, activeOpponents: activeOpponents, iterations: iterations, rng: &rng)
-            // Map counts to percentages and to the known display titles
-            let total = max(1, result.iterations)
-            // Map HandCategory to titles used in allPokerHands order
-            let mapping: [(HandCategory, String)] = [
-                (.royalFlush, "Royal Flush"),
-                (.straightFlush, "Straight Flush"),
-                (.fourOfAKind, "Vierling"),
-                (.fullHouse, "Full House"),
-                (.flush, "Flush"),
-                (.straight, "Straight"),
-                (.threeOfAKind, "Drilling"),
-                (.twoPair, "Zwei Paare"),
-                (.onePair, "Ein Paar"),
-                (.highCard, "Hohe Karte")
-            ]
-            let colorByTitle = pokerHandColorLookup()
-            var items: [PrognosisItem] = []
-            for (cat, title) in mapping {
-                let count = result.handCategoryCounts[cat] ?? 0
-                let pct = 100.0 * Double(count) / Double(total)
-                let color = colorForHandTitle(title)
-                items.append(PrognosisItem(title: title, percent: pct, color: color))
-            }
-            
-            // Compute improvement chance: if we already have at least a pair now, sum categories strictly better than one pair; otherwise sum categories from one pair and above.
-            let havePairNow = currentlyAtLeastPair(hero: hero, board: board)
-            let percentByTitle: [String: Double] = Dictionary(uniqueKeysWithValues: items.map { ($0.title, $0.percent) })
-            func pct(_ title: String) -> Double { percentByTitle[title] ?? 0 }
-            let betterThanPairTitles = [
-                "Zwei Paare", "Drilling", "Straight", "Flush", "Full House", "Vierling", "Straight Flush", "Royal Flush"
-            ]
-            let atLeastPairTitles = [
-                "Ein Paar", "Zwei Paare", "Drilling", "Straight", "Flush", "Full House", "Vierling", "Straight Flush", "Royal Flush"
-            ]
-            let improvement = (havePairNow ? betterThanPairTitles : atLeastPairTitles).reduce(0.0) { $0 + pct($1) }
-            improvementPercent = improvement
 
-            simulatedTop = Array(items.sorted { $0.percent > $1.percent }.prefix(4))
-            isSimulating = false
+        // Capture strategy on the main actor to avoid sending a non-Sendable existential into the Task
+        let strategy = simulationManager.strategy()
+
+        Task {
+            let result = await strategy.simulate(hero: hero, board: board, activeOpponents: activeOpponents, iterations: iterations)
+            await MainActor.run {
+                let total = max(1, result.iterations)
+                let mapping: Array<(HandCategory, String)> = [
+                    (.royalFlush, "Royal Flush"),
+                    (.straightFlush, "Straight Flush"),
+                    (.fourOfAKind, "Vierling"),
+                    (.fullHouse, "Full House"),
+                    (.flush, "Flush"),
+                    (.straight, "Straight"),
+                    (.threeOfAKind, "Drilling"),
+                    (.twoPair, "Zwei Paare"),
+                    (.onePair, "Ein Paar"),
+                    (.highCard, "Hohe Karte")
+                ]
+                var items: [PrognosisItem] = []
+                for (cat, title) in mapping {
+                    let count = result.handCategoryCounts[cat] ?? 0
+                    let pct = 100.0 * Double(count) / Double(total)
+                    let color = colorForHandTitle(title)
+                    items.append(PrognosisItem(title: title, percent: pct, color: color))
+                }
+                let havePairNow = currentlyAtLeastPair(hero: hero, board: board)
+                let percentByTitle: [String: Double] = Dictionary(uniqueKeysWithValues: items.map { ($0.title, $0.percent) })
+                func pct(_ title: String) -> Double { percentByTitle[title] ?? 0 }
+                let betterThanPairTitles = [
+                    "Zwei Paare", "Drilling", "Straight", "Flush", "Full House", "Vierling", "Straight Flush", "Royal Flush"
+                ]
+                let atLeastPairTitles = [
+                    "Ein Paar", "Zwei Paare", "Drilling", "Straight", "Flush", "Full House", "Vierling", "Straight Flush", "Royal Flush"
+                ]
+                let improvement = (havePairNow ? betterThanPairTitles : atLeastPairTitles).reduce(0.0) { $0 + pct($1) }
+                improvementPercent = improvement
+
+                simulatedTop = Array(items.sorted { $0.percent > $1.percent }.prefix(4))
+                isSimulating = false
+            }
         }
     }
     
@@ -746,4 +757,7 @@ private struct ShimmerAnimation: ViewModifier {
 
 #Preview {
     SimulationView()
+        .environmentObject(SimulationManager())
+    
 }
+

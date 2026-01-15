@@ -40,4 +40,16 @@ enum Rank: Int, CaseIterable, Identifiable {
     }
 }
 
-
+// Local fallback for simulation category mapping if not provided elsewhere
+enum HandCategory: Hashable {
+    case royalFlush
+    case straightFlush
+    case fourOfAKind
+    case fullHouse
+    case flush
+    case straight
+    case threeOfAKind
+    case twoPair
+    case onePair
+    case highCard
+}

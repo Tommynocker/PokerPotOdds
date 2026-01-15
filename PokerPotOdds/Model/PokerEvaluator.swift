@@ -5,18 +5,6 @@ import Foundation
 // enum Rank: Int { case two = 2, three, four, five, six, seven, eight, nine, ten, jack, queen, king, ace }
 // enum Suit: Int { case clubs, diamonds, hearts, spades }
 
-enum HandCategory: Int, CaseIterable {
-    case highCard = 0
-    case onePair
-    case twoPair
-    case threeOfAKind
-    case straight
-    case flush
-    case fullHouse
-    case fourOfAKind
-    case straightFlush
-    case royalFlush
-}
 
 func evaluateBestCategory(hero: [Card], board: [Card]) -> HandCategory {
     let allCards = hero + board
@@ -29,12 +17,28 @@ func evaluateBestCategory(hero: [Card], board: [Card]) -> HandCategory {
     
     for hand in fiveCardHands {
         let category = evaluateCategory(of: hand)
-        if category.rawValue > bestCategory.rawValue {
+        if handCategoryRank(category) > handCategoryRank(bestCategory) {
             bestCategory = category
         }
     }
     
     return bestCategory
+}
+
+private func handCategoryRank(_ category: HandCategory) -> Int {
+    // Lower rank for weaker hands, higher for stronger
+    switch category {
+    case .highCard: return 1
+    case .onePair: return 2
+    case .twoPair: return 3
+    case .threeOfAKind: return 4
+    case .straight: return 5
+    case .flush: return 6
+    case .fullHouse: return 7
+    case .fourOfAKind: return 8
+    case .straightFlush: return 9
+    case .royalFlush: return 10
+    }
 }
 
 private func evaluateCategory(of five: [Card]) -> HandCategory {
@@ -130,3 +134,4 @@ private func combinations<T>(from array: [T], choose k: Int) -> [[T]] {
     
     return subcombosWithHead + subcombosWithoutHead
 }
+
