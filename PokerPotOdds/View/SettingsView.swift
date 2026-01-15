@@ -33,10 +33,24 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Allgemein") {
+                Section("Simulationen") {
                     Picker("Simulation", selection: $simulationManager.selected) {
                         ForEach(SimulationManager.StrategyKind.allCases) { kind in
                             Text(kind.displayName).tag(kind)
+                        }
+                    }
+                    
+                  
+                }
+                
+                Section("Erklärungen") {
+                    NavigationLink {
+                        ChanceExplanationView()
+                    } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: "arrow.up.right")
+                                .foregroundStyle(.secondary)
+                            Text("Chance")
                         }
                     }
                 }
@@ -64,3 +78,9 @@ struct SettingsView: View {
         .environmentObject(SimulationManager())
 }
 
+//struct ChanceExplanationView: View {
+//    var body: some View {
+//        Text("Chance Explanation Content")
+//            .navigationTitle("Chance")
+//    }
+//}

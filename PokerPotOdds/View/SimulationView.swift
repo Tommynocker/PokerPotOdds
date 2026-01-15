@@ -145,15 +145,6 @@ struct SimulationView: View {
                                 .font(.subheadline)
                                 .foregroundStyle(.primary)
                                 .opacity(0.7)
-                            Text("•")
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
-                                .opacity(0.6)
-                            Text(simulationManager.selected.displayName)
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
-                                .lineLimit(1)
-                                .truncationMode(.tail)
                         }
                     }
                     .buttonStyle(.plain)
@@ -172,23 +163,31 @@ struct SimulationView: View {
                             }
                             .padding(.vertical, 4)
                         } else if !simulatedTop.isEmpty {
-                            ForEach(simulatedTop) { item in
-                                HStack(spacing: 8) {
-                                    Circle()
-                                        .fill(item.color)
-                                        .frame(width: 12, height: 12)
-                                    Text(item.title)
-                                        .font(.subheadline)
-                                        .foregroundStyle(.primary)
-                                    Spacer()
-                                    Text(String(format: "%.1f%%", item.percent))
-                                        .font(.subheadline)
-                                        .monospacedDigit()
-                                        .foregroundStyle(.primary)
+                            let nonZeroItems = simulatedTop.filter { $0.percent > 0 }
+                            if nonZeroItems.isEmpty {
+                                Text("–")
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                                    .padding(.vertical, 4)
+                            } else {
+                                ForEach(nonZeroItems) { item in
+                                    HStack(spacing: 8) {
+                                        Circle()
+                                            .fill(item.color)
+                                            .frame(width: 12, height: 12)
+                                        Text(item.title)
+                                            .font(.subheadline)
+                                            .foregroundStyle(.primary)
+                                        Spacer()
+                                        Text(String(format: "%.1f%%", item.percent))
+                                            .font(.subheadline)
+                                            .monospacedDigit()
+                                            .foregroundStyle(.primary)
+                                    }
+                                    .padding(.vertical, 4)
                                 }
-                                .padding(.vertical, 4)
                             }
-                            if let imp = improvementPercent {
+                            if let imp = improvementPercent, imp > 0 {
                                 Divider()
                                     .padding(.vertical, 6)
                                 HStack(spacing: 8) {
@@ -208,7 +207,7 @@ struct SimulationView: View {
                                 .foregroundStyle(.secondary)
                         }
                     }
-                    .frame(minHeight: 110)
+                    .frame(minHeight: 110, alignment: .topLeading)
                 }
                 .padding(.leading, 12)
             }
@@ -511,18 +510,23 @@ struct SimulationView: View {
                     items.append(PrognosisItem(title: title, percent: pct, color: color))
                 }
                 let havePairNow = currentlyAtLeastPair(hero: hero, board: board)
-                let percentByTitle: [String: Double] = Dictionary(uniqueKeysWithValues: items.map { ($0.title, $0.percent) })
-                func pct(_ title: String) -> Double { percentByTitle[title] ?? 0 }
-                let betterThanPairTitles = [
-                    "Zwei Paare", "Drilling", "Straight", "Flush", "Full House", "Vierling", "Straight Flush", "Royal Flush"
-                ]
-                let atLeastPairTitles = [
-                    "Ein Paar", "Zwei Paare", "Drilling", "Straight", "Flush", "Full House", "Vierling", "Straight Flush", "Royal Flush"
-                ]
-                let improvement = (havePairNow ? betterThanPairTitles : atLeastPairTitles).reduce(0.0) { $0 + pct($1) }
-                improvementPercent = improvement
+                let knownBoardCount = board.compactMap { $0 }.count
+                if knownBoardCount == 5 {
+                    improvementPercent = 0
+                } else {
+                    let percentByTitle: [String: Double] = Dictionary(uniqueKeysWithValues: items.map { ($0.title, $0.percent) })
+                    func pct(_ title: String) -> Double { percentByTitle[title] ?? 0 }
+                    let betterThanPairTitles = [
+                        "Zwei Paare", "Drilling", "Straight", "Flush", "Full House", "Vierling", "Straight Flush", "Royal Flush"
+                    ]
+                    let atLeastPairTitles = [
+                        "Ein Paar", "Zwei Paare", "Drilling", "Straight", "Flush", "Full House", "Vierling", "Straight Flush", "Royal Flush"
+                    ]
+                    let improvement = (havePairNow ? betterThanPairTitles : atLeastPairTitles).reduce(0.0) { $0 + pct($1) }
+                    improvementPercent = improvement
+                }
 
-                simulatedTop = Array(items.sorted { $0.percent > $1.percent }.prefix(4))
+                simulatedTop = Array(items.filter { $0.percent > 0 }.sorted { $0.percent > $1.percent }.prefix(4))
                 isSimulating = false
             }
         }
