@@ -259,6 +259,9 @@ struct SimulationView: View {
                     .stroke(isSelected ? Color.accentColor : Color.clear, lineWidth: 2)
             )
         }
+        .onTapGesture(count: 2) {
+            removeCardFromSlot(title: title)
+        }
         .contextMenu {
             Button(role: .destructive) {
                 removeCardFromSlot(title: title)
@@ -271,13 +274,13 @@ struct SimulationView: View {
     private func removeCardFromSlot(title: String) {
         // Map the visible title to the slot index
         switch title {
-        case "Hand 1": hero[0] = nil
-        case "Hand 2": hero[1] = nil
-        case "F1": board[0] = nil
-        case "F2": board[1] = nil
-        case "F3": board[2] = nil
-        case "T": board[3] = nil
-        case "R": board[4] = nil
+        case "Hand 1": hero[0] = nil; currentIndex = 0
+        case "Hand 2": hero[1] = nil; currentIndex = 1
+        case "F1": board[0] = nil; currentIndex = 2
+        case "F2": board[1] = nil; currentIndex = 3
+        case "F3": board[2] = nil; currentIndex = 4
+        case "T": board[3] = nil; currentIndex = 5
+        case "R": board[4] = nil; currentIndex = 6
         default: break
         }
     }
