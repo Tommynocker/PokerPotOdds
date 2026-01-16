@@ -27,6 +27,7 @@
 		87577C192F1A264100BB7288 /* HowToReadTableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87577C182F1A264100BB7288 /* HowToReadTableView.swift */; };
 		8780AA732F1AA40800FD6720 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = 8780AA722F1AA40800FD6720 /* GoogleMobileAds */; };
 		8780AA752F1AA63E00FD6720 /* HeuristicExplanationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8780AA742F1AA63E00FD6720 /* HeuristicExplanationView.swift */; };
+		87C8F2A42F1ADAAA0051C407 /* OpponentRangesSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87C8F2A32F1ADAA80051C407 /* OpponentRangesSheet.swift */; };
 		87FEADCB2F1A210000588D6C /* GoogleMobileAdsConsentManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87FEADCA2F1A210000588D6C /* GoogleMobileAdsConsentManager.swift */; };
 		DCBCF10B13B4EB3614A7ECB5 /* PokerPotOddsApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11D7B754C251DAC338418F15 /* PokerPotOddsApp.swift */; };
 /* End PBXBuildFile section */
@@ -51,6 +52,7 @@
 		87577C152F1A262800BB7288 /* ExactOddsExplanationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExactOddsExplanationView.swift; sourceTree = "<group>"; };
 		87577C182F1A264100BB7288 /* HowToReadTableView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HowToReadTableView.swift; sourceTree = "<group>"; };
 		8780AA742F1AA63E00FD6720 /* HeuristicExplanationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeuristicExplanationView.swift; sourceTree = "<group>"; };
+		87C8F2A32F1ADAA80051C407 /* OpponentRangesSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpponentRangesSheet.swift; sourceTree = "<group>"; };
 		87FEADCA2F1A210000588D6C /* GoogleMobileAdsConsentManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoogleMobileAdsConsentManager.swift; sourceTree = "<group>"; };
 		C03E1345F293269F65074E45 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C69F9604FA8B9A8A6D31CDF8 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -142,6 +144,7 @@
 		87577C1A2F1A266400BB7288 /* Simulation */ = {
 			isa = PBXGroup;
 			children = (
+				87C8F2A32F1ADAA80051C407 /* OpponentRangesSheet.swift */,
 				8708B2352F18C7720053B8B5 /* SimulationView.swift */,
 				8755296F2F18239D00F06E49 /* PokerHandsSheet.swift */,
 			);
@@ -244,6 +247,7 @@
 				8780AA752F1AA63E00FD6720 /* HeuristicExplanationView.swift in Sources */,
 				87577C162F1A262800BB7288 /* ExactOddsExplanationView.swift in Sources */,
 				875529762F18287000F06E49 /* PokerSimulator.swift in Sources */,
+				87C8F2A42F1ADAAA0051C407 /* OpponentRangesSheet.swift in Sources */,
 				8708B2402F19367D0053B8B5 /* ChanceExplanationView.swift in Sources */,
 				875529742F18286E00F06E49 /* PokerEvaluator.swift in Sources */,
 				87577C142F1A260C00BB7288 /* MonteCarloExplanationView.swift in Sources */,
