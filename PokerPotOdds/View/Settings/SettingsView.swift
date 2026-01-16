@@ -32,80 +32,93 @@ struct SettingsView: View {
     
     var body: some View {
         NavigationStack {
-            Form {
-                Section("Simulationen") {
-                    Picker("Simulation", selection: $simulationManager.selected) {
-                        ForEach(SimulationManager.StrategyKind.allCases) { kind in
-                            Text(kind.displayName).tag(kind)
+            VStack(spacing: 0) {
+                Form {
+                    Section("Simulationen") {
+                        Picker("Modell auswählen", selection: $simulationManager.selected) {
+                            ForEach(SimulationManager.StrategyKind.allCases) { kind in
+                                Text(kind.displayName).tag(kind)
+                            }
                         }
                     }
                     
-                  
-                }
-                
-                Section("Erklärungen") {
-                    
-                    NavigationLink {
-                        HowToReadTableView()
-                    } label: {
-                        HStack(spacing: 8) {
-                            Image(systemName: "doc.text.magnifyingglass")
-                                .foregroundStyle(.secondary)
-                            Text("Wie lese ich die Tabelle?")
-                        }
-                    }
-                    NavigationLink {
-                        ChanceExplanationView()
-                    } label: {
-                        HStack(spacing: 8) {
-                            Image(systemName: "arrow.up.right")
-                                .foregroundStyle(.secondary)
-                            Text("Chance")
-                        }
-                    }
-                    NavigationLink {
-                        MonteCarloExplanationView()
-                    } label: {
-                        HStack(spacing: 8) {
-                            Image(systemName: "chart.dots.scatter")
-                                .foregroundStyle(.secondary)
-                            Text("Monte‑Carlo‑Simulation")
-                        }
-                    }
-                    NavigationLink {
-                        ExactOddsExplanationView()
-                    } label: {
-                        HStack(spacing: 8) {
-                            Image(systemName: "percent")
-                                .foregroundStyle(.secondary)
-                            Text("Exact Odds")
-                        }
+                    // Inline banner between sections
+                    Section {
+                        BannerView()
+                            .frame(maxWidth: .infinity)
+                            .listRowInsets(EdgeInsets())
+                            .listRowBackground(Color.clear)
                     }
                     
-                    
-                    
-                    
-                    
-                }
-            }
-            .navigationTitle("Settings")
-            .onAppear {
-                if let restored = kind(for: selectedSimulationID) {
-                    simulationManager.selected = restored
-                } else {
-                    // Fallback to a default value if none stored or not matched
-                    if let first = SimulationManager.StrategyKind.allCases.first {
-                        simulationManager.selected = first
-                        selectedSimulationID = idString(for: first)
+                    Section("Erklärungen") {
+                        NavigationLink {
+                            HowToReadTableView()
+                        } label: {
+                            HStack(spacing: 8) {
+                                Image(systemName: "doc.text.magnifyingglass")
+                                    .foregroundStyle(.secondary)
+                                Text("Wie lese ich die Tabelle?")
+                            }
+                        }
+                        NavigationLink {
+                            ChanceExplanationView()
+                        } label: {
+                            HStack(spacing: 8) {
+                                Image(systemName: "arrow.up.right")
+                                    .foregroundStyle(.secondary)
+                                Text("Chance")
+                            }
+                        }
+                        NavigationLink {
+                            MonteCarloExplanationView()
+                        } label: {
+                            HStack(spacing: 8) {
+                                Image(systemName: "chart.dots.scatter")
+                                    .foregroundStyle(.secondary)
+                                Text("Monte‑Carlo‑Simulation")
+                            }
+                        }
+                        NavigationLink {
+                            ExactOddsExplanationView()
+                        } label: {
+                            HStack(spacing: 8) {
+                                Image(systemName: "percent")
+                                    .foregroundStyle(.secondary)
+                                Text("Exact Odds")
+                            }
+                        }
                     }
                 }
-            }
-            .onChange(of: simulationManager.selected) { newValue in
-                selectedSimulationID = idString(for: newValue)
+                .navigationTitle("Settings")
+                .onAppear {
+                    if let restored = kind(for: selectedSimulationID) {
+                        simulationManager.selected = restored
+                    } else {
+                        if let first = SimulationManager.StrategyKind.allCases.first {
+                            simulationManager.selected = first
+                            selectedSimulationID = idString(for: first)
+                        }
+                    }
+                }
+                .onChange(of: simulationManager.selected) { newValue in
+                    selectedSimulationID = idString(for: newValue)
+                }
             }
         }
     }
 }
+
+private struct BannerView: View {
+    var body: some View {
+        Text("Werbebanner")
+            .font(.footnote)
+            .foregroundStyle(.secondary)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 10)
+            .background(.thinMaterial)
+    }
+}
+
 #Preview {
     SettingsView()
         .environmentObject(SimulationManager())
