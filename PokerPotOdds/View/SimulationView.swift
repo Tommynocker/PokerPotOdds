@@ -179,7 +179,7 @@ struct SimulationView: View {
                                             .font(.subheadline)
                                             .foregroundStyle(.primary)
                                         Spacer()
-                                        Text(String(format: "%.1f%%", item.percent))
+                                        Text(String(format: "%.0f%%", item.percent))
                                             .font(.subheadline)
                                             .monospacedDigit()
                                             .foregroundStyle(.primary)
@@ -194,7 +194,7 @@ struct SimulationView: View {
                                     Image(systemName: "arrow.up.right")
                                     Text("Chance")
                                     Spacer()
-                                    Text(String(format: "%.1f%%", imp))
+                                    Text(String(format: "%.0f%%", imp))
                                         .font(.subheadline)
                                         .monospacedDigit()
                                        
