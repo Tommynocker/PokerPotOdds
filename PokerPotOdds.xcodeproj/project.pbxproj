@@ -9,33 +9,40 @@
 /* Begin PBXBuildFile section */
 		1C5DC4C4CBC23B717578278D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C03E1345F293269F65074E45 /* Assets.xcassets */; };
 		3F290F7D7453DB60D7B074B3 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C69F9604FA8B9A8A6D31CDF8 /* ContentView.swift */; };
-		67D318DB593AC61064B1537C /* Preview Content/Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4237E724E8AACAF9A39E2F60 /* Preview Content/Preview Assets.xcassets */; };
+		67D318DB593AC61064B1537C /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4237E724E8AACAF9A39E2F60 /* Preview Assets.xcassets */; };
 		8708B2332F18C7620053B8B5 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8708B2322F18C75F0053B8B5 /* SettingsView.swift */; };
 		8708B2362F18C7770053B8B5 /* SimulationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8708B2352F18C7720053B8B5 /* SimulationView.swift */; };
 		8708B23C2F18CF120053B8B5 /* SimulationStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8708B23B2F18CF120053B8B5 /* SimulationStrategy.swift */; };
 		8708B2402F19367D0053B8B5 /* ChanceExplanationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8708B23F2F19367D0053B8B5 /* ChanceExplanationView.swift */; };
+		8708B2422F1A1C330053B8B5 /* AdBannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8708B2412F1A1C330053B8B5 /* AdBannerView.swift */; };
+		8708B2442F1A1DBE0053B8B5 /* AdConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8708B2432F1A1DBE0053B8B5 /* AdConfig.swift */; };
+		8708B2472F1A1E210053B8B5 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = 8708B2462F1A1E210053B8B5 /* GoogleMobileAds */; };
 		8755296E2F1814D900F06E49 /* CardEnums.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8755296D2F1814D900F06E49 /* CardEnums.swift */; };
 		875529702F18239D00F06E49 /* PokerHandsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8755296F2F18239D00F06E49 /* PokerHandsSheet.swift */; };
 		875529722F18258B00F06E49 /* PokerProbability.swift in Sources */ = {isa = PBXBuildFile; fileRef = 875529712F18258B00F06E49 /* PokerProbability.swift */; };
 		875529742F18286E00F06E49 /* PokerEvaluator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 875529732F18286E00F06E49 /* PokerEvaluator.swift */; };
 		875529762F18287000F06E49 /* PokerSimulator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 875529752F18287000F06E49 /* PokerSimulator.swift */; };
+		87FEADCB2F1A210000588D6C /* GoogleMobileAdsConsentManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87FEADCA2F1A210000588D6C /* GoogleMobileAdsConsentManager.swift */; };
 		DCBCF10B13B4EB3614A7ECB5 /* PokerPotOddsApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11D7B754C251DAC338418F15 /* PokerPotOddsApp.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		11D7B754C251DAC338418F15 /* PokerPotOddsApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PokerPotOddsApp.swift; sourceTree = "<group>"; };
-		4237E724E8AACAF9A39E2F60 /* Preview Content/Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Content/Preview Assets.xcassets"; sourceTree = "<group>"; };
+		4237E724E8AACAF9A39E2F60 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = "Preview Assets.xcassets"; path = "../Preview Content/Preview Assets.xcassets"; sourceTree = "<group>"; };
 		54BAE0D6806F2B215DC0EB93 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		6C0DD639EF033F792E850740 /* PokerPotOdds.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; path = PokerPotOdds.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8708B2322F18C75F0053B8B5 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		8708B2352F18C7720053B8B5 /* SimulationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimulationView.swift; sourceTree = "<group>"; };
 		8708B23B2F18CF120053B8B5 /* SimulationStrategy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimulationStrategy.swift; sourceTree = "<group>"; };
 		8708B23F2F19367D0053B8B5 /* ChanceExplanationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChanceExplanationView.swift; sourceTree = "<group>"; };
+		8708B2412F1A1C330053B8B5 /* AdBannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdBannerView.swift; sourceTree = "<group>"; };
+		8708B2432F1A1DBE0053B8B5 /* AdConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdConfig.swift; sourceTree = "<group>"; };
 		8755296D2F1814D900F06E49 /* CardEnums.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardEnums.swift; sourceTree = "<group>"; };
 		8755296F2F18239D00F06E49 /* PokerHandsSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PokerHandsSheet.swift; sourceTree = "<group>"; };
 		875529712F18258B00F06E49 /* PokerProbability.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PokerProbability.swift; sourceTree = "<group>"; };
 		875529732F18286E00F06E49 /* PokerEvaluator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PokerEvaluator.swift; sourceTree = "<group>"; };
 		875529752F18287000F06E49 /* PokerSimulator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PokerSimulator.swift; sourceTree = "<group>"; };
+		87FEADCA2F1A210000588D6C /* GoogleMobileAdsConsentManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoogleMobileAdsConsentManager.swift; sourceTree = "<group>"; };
 		C03E1345F293269F65074E45 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C69F9604FA8B9A8A6D31CDF8 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -45,6 +52,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8708B2472F1A1E210053B8B5 /* GoogleMobileAds in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -67,6 +75,18 @@
 			);
 			sourceTree = "<group>";
 		};
+		8708B2482F1A1E3A0053B8B5 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				8708B2432F1A1DBE0053B8B5 /* AdConfig.swift */,
+				87FEADCA2F1A210000588D6C /* GoogleMobileAdsConsentManager.swift */,
+				C03E1345F293269F65074E45 /* Assets.xcassets */,
+				4237E724E8AACAF9A39E2F60 /* Preview Assets.xcassets */,
+				54BAE0D6806F2B215DC0EB93 /* Info.plist */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
 		8755296A2F18149D00F06E49 /* Model */ = {
 			isa = PBXGroup;
 			children = (
@@ -85,6 +105,7 @@
 				8708B2322F18C75F0053B8B5 /* SettingsView.swift */,
 				8755296F2F18239D00F06E49 /* PokerHandsSheet.swift */,
 				8708B23F2F19367D0053B8B5 /* ChanceExplanationView.swift */,
+				8708B2412F1A1C330053B8B5 /* AdBannerView.swift */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -100,14 +121,12 @@
 		E5D491A1E82DC6D93EBCE2A4 /* PokerPotOdds */ = {
 			isa = PBXGroup;
 			children = (
+				8708B2482F1A1E3A0053B8B5 /* Resources */,
 				8755296C2F1814B600F06E49 /* Enum */,
 				8755296B2F1814A300F06E49 /* View */,
 				8755296A2F18149D00F06E49 /* Model */,
 				11D7B754C251DAC338418F15 /* PokerPotOddsApp.swift */,
 				C69F9604FA8B9A8A6D31CDF8 /* ContentView.swift */,
-				C03E1345F293269F65074E45 /* Assets.xcassets */,
-				4237E724E8AACAF9A39E2F60 /* Preview Content/Preview Assets.xcassets */,
-				54BAE0D6806F2B215DC0EB93 /* Info.plist */,
 			);
 			path = PokerPotOdds;
 			sourceTree = "<group>";
@@ -156,6 +175,9 @@
 				Base,
 			);
 			mainGroup = 60BE3C381C0A515115671050;
+			packageReferences = (
+				8708B2452F1A1E210053B8B5 /* XCLocalSwiftPackageReference "../../../Downloads/swift-package-manager-google-mobile-ads-main" */,
+			);
 			productRefGroup = 2A39B54DE94229C7B5D821FA /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -171,7 +193,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				1C5DC4C4CBC23B717578278D /* Assets.xcassets in Resources */,
-				67D318DB593AC61064B1537C /* Preview Content/Preview Assets.xcassets in Resources */,
+				67D318DB593AC61064B1537C /* Preview Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -185,13 +207,16 @@
 				875529702F18239D00F06E49 /* PokerHandsSheet.swift in Sources */,
 				8708B2332F18C7620053B8B5 /* SettingsView.swift in Sources */,
 				8755296E2F1814D900F06E49 /* CardEnums.swift in Sources */,
+				8708B2422F1A1C330053B8B5 /* AdBannerView.swift in Sources */,
 				8708B2362F18C7770053B8B5 /* SimulationView.swift in Sources */,
 				DCBCF10B13B4EB3614A7ECB5 /* PokerPotOddsApp.swift in Sources */,
 				875529762F18287000F06E49 /* PokerSimulator.swift in Sources */,
 				8708B2402F19367D0053B8B5 /* ChanceExplanationView.swift in Sources */,
 				875529742F18286E00F06E49 /* PokerEvaluator.swift in Sources */,
+				8708B2442F1A1DBE0053B8B5 /* AdConfig.swift in Sources */,
 				875529722F18258B00F06E49 /* PokerProbability.swift in Sources */,
 				3F290F7D7453DB60D7B074B3 /* ContentView.swift in Sources */,
+				87FEADCB2F1A210000588D6C /* GoogleMobileAdsConsentManager.swift in Sources */,
 				8708B23C2F18CF120053B8B5 /* SimulationStrategy.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -208,7 +233,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
 				ENABLE_PREVIEWS = YES;
-				INFOPLIST_FILE = PokerPotOdds/Info.plist;
+				INFOPLIST_FILE = PokerPotOdds/Resources/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -322,7 +347,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
 				ENABLE_PREVIEWS = YES;
-				INFOPLIST_FILE = PokerPotOdds/Info.plist;
+				INFOPLIST_FILE = PokerPotOdds/Resources/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -360,6 +385,20 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		8708B2452F1A1E210053B8B5 /* XCLocalSwiftPackageReference "../../../Downloads/swift-package-manager-google-mobile-ads-main" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "../../../Downloads/swift-package-manager-google-mobile-ads-main";
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		8708B2462F1A1E210053B8B5 /* GoogleMobileAds */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = GoogleMobileAds;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 4873A681E02301A8997FA704 /* Project object */;
 }

@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import GoogleMobileAds
 
 
 // MARK: - Model
@@ -103,6 +104,11 @@ struct SimulationView: View {
 
     private var slotSection: some View {
         VStack(alignment: .leading, spacing: 12) {
+            // Google AdMob Banner spanning the full width above hand and prognosis
+            AdBannerView(adUnitID: AdConfig.bannerAdUnitID)
+                .frame(height: 50)
+                .frame(maxWidth: .infinity)
+            
             HStack(alignment: .top, spacing: 24) {
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Deine Hand")
@@ -209,7 +215,6 @@ struct SimulationView: View {
                     }
                     .frame(minHeight: 110, alignment: .topLeading)
                 }
-                .padding(.leading, 12)
             }
 
             Text("Board")
