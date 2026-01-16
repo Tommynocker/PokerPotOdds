@@ -7,6 +7,7 @@
 
 import SwiftUI
 import GoogleMobileAds
+import UIKit
 
 
 // MARK: - Model
@@ -31,6 +32,9 @@ struct SimulationView: View {
     @State private var currentIndex: Int = 0 // 0..6 -> hero[0], hero[1], board[0..4]
     @State private var manualDeadOuts: Int = 0 // zusätzliche Outs, die raus sind (durch gegnerische Karten etc.)
     @State private var foldedOpponents: Int = 0 // Mitspieler, die bereits ausgestiegen sind
+    
+    @AppStorage("hapticsEnabled") private var hapticsEnabled: Bool = true
+    @AppStorage("prognosisHapticsEnabled") private var prognosisHapticsEnabled: Bool = false
 
     @State private var showingPokerHandsSheet = false
     
@@ -299,6 +303,11 @@ struct SimulationView: View {
         case "R": board[4] = nil; currentIndex = 6
         default: break
         }
+        if hapticsEnabled {
+            let generator = UIImpactFeedbackGenerator(style: .medium)
+            generator.prepare()
+            generator.impactOccurred(intensity: 1)
+        }
     }
 
     // MARK: Card Grid
@@ -356,6 +365,12 @@ struct SimulationView: View {
             withAnimation(.easeInOut(duration: 0.2)) {
                 removeCardEverywhere(card)
             }
+            // Haptic feedback on card removal
+            if hapticsEnabled {
+                let generator = UIImpactFeedbackGenerator(style: .heavy)
+                generator.prepare()
+                generator.impactOccurred(intensity: 0.7)
+            }
             return
         }
 
@@ -363,6 +378,12 @@ struct SimulationView: View {
         withAnimation(.easeInOut(duration: 0.2)) {
             placeInCurrentSlot(card)
             advanceToNextFreeSlot()
+        }
+        // Subtle haptic feedback when a card is selected (if enabled)
+        if hapticsEnabled {
+            let generator = UIImpactFeedbackGenerator(style: .medium)
+            generator.prepare()
+            generator.impactOccurred(intensity: 1)
         }
     }
 
@@ -418,6 +439,11 @@ struct SimulationView: View {
         if hero[1] == card { hero[1] = nil }
         for i in 0..<board.count where board[i] == card {
             board[i] = nil
+        }
+        if hapticsEnabled {
+            let generator = UIImpactFeedbackGenerator(style: .medium)
+            generator.prepare()
+            generator.impactOccurred(intensity: 1)
         }
         advanceToNextFreeSlot()
     }
@@ -536,6 +562,12 @@ struct SimulationView: View {
 
                 simulatedTop = Array(items.filter { $0.percent > 0 }.sorted { $0.percent > $1.percent }.prefix(4))
                 isSimulating = false
+
+                if prognosisHapticsEnabled && hapticsEnabled {
+                    let generator = UINotificationFeedbackGenerator()
+                    generator.prepare()
+                    generator.notificationOccurred(.success)
+                }
             }
         }
     }

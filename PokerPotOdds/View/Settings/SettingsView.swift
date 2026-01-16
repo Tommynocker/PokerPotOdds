@@ -10,6 +10,8 @@ import SwiftUI
 struct SettingsView: View {
     @EnvironmentObject private var simulationManager: SimulationManager
     @AppStorage("selectedSimulationID") private var selectedSimulationID: String = ""
+    @AppStorage("hapticsEnabled") private var hapticsEnabled: Bool = true
+    @AppStorage("prognosisHapticsEnabled") private var prognosisHapticsEnabled: Bool = false
     
     private func idString(for kind: SimulationManager.StrategyKind) -> String {
         // Prefer the Identifiable id if it's a String; else stringify it
@@ -34,12 +36,20 @@ struct SettingsView: View {
         NavigationStack {
             VStack(spacing: 0) {
                 Form {
-                    Section("Simulationen") {
-                        Picker("Modell auswählen", selection: $simulationManager.selected) {
+                    Section("Einstellungen") {
+                        Picker("Simulation", selection: $simulationManager.selected) {
                             ForEach(SimulationManager.StrategyKind.allCases) { kind in
                                 Text(kind.displayName).tag(kind)
                             }
                         }
+                        Toggle(isOn: $hapticsEnabled) {
+                            Text("Karten‑Haptik")
+                        }
+                        .tint(.accentColor)
+                        Toggle(isOn: $prognosisHapticsEnabled) {
+                            Text("Prognose‑Haptik")
+                        }
+                        .tint(.accentColor)
                     }
                     
                     // Inline banner between sections
