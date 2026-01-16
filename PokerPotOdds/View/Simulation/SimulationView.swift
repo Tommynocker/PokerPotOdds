@@ -35,6 +35,7 @@ struct SimulationView: View {
     
     @AppStorage("hapticsEnabled") private var hapticsEnabled: Bool = true
     @AppStorage("prognosisHapticsEnabled") private var prognosisHapticsEnabled: Bool = false
+    @AppStorage("simulationAutoStartMode") private var simulationAutoStartMode: String = "completeStreets"
 
     @State private var showingPokerHandsSheet = false
     
@@ -42,6 +43,8 @@ struct SimulationView: View {
     @State private var isSimulating: Bool = false
     
     @State private var improvementPercent: Double? = nil
+    
+    @State private var autoRunDebounceTask: Task<Void, Never>? = nil
 
     @EnvironmentObject private var simulationManager: SimulationManager
 
@@ -68,11 +71,10 @@ struct SimulationView: View {
             .sheet(isPresented: $showingPokerHandsSheet) {
                 PokerHandsSheet(hero: hero, board: board, opponents: opponents, foldedOpponents: foldedOpponents)
             }
-            .onChange(of: hero) { _ in runSelectedPrognosis() }
-            .onChange(of: board) { _ in runSelectedPrognosis() }
-            .onChange(of: opponents) { _ in runSelectedPrognosis() }
-            .onChange(of: foldedOpponents) { _ in runSelectedPrognosis() }
-            .onAppear { runSelectedPrognosis() }
+            .onChange(of: hero) { _ in scheduleAutoRunDebounced() }
+            .onChange(of: board) { _ in scheduleAutoRunDebounced() }
+            .onChange(of: opponents) { _ in scheduleAutoRunDebounced() }
+            .onChange(of: foldedOpponents) { _ in scheduleAutoRunDebounced() }
         }
     }
 
@@ -762,6 +764,35 @@ struct SimulationView: View {
             foldedOpponents = 0
             currentIndex = 0
             manualDeadOuts = 0
+        }
+    }
+    
+    private func shouldAutoRunPrognosis() -> Bool {
+        if simulationAutoStartMode == "always" { return true }
+        // completeStreets mode
+        let heroCount = hero.compactMap { $0 }.count
+        let boardCount = board.compactMap { $0 }.count
+        // Preflop: both hole cards present
+        if heroCount == 2 && boardCount == 0 { return true }
+        // Flop complete
+        if boardCount == 3 { return true }
+        // Turn present
+        if boardCount == 4 { return true }
+        // River present
+        if boardCount == 5 { return true }
+        return false
+    }
+
+    private func scheduleAutoRunDebounced() {
+        // Cancel any existing debounce task
+        autoRunDebounceTask?.cancel()
+        // Only schedule if condition allows auto run
+        guard shouldAutoRunPrognosis() else { return }
+        autoRunDebounceTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 150_000_000) // 150ms
+            if !Task.isCancelled {
+                runSelectedPrognosis()
+            }
         }
     }
 }

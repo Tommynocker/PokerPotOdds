@@ -12,6 +12,7 @@ struct SettingsView: View {
     @AppStorage("selectedSimulationID") private var selectedSimulationID: String = ""
     @AppStorage("hapticsEnabled") private var hapticsEnabled: Bool = true
     @AppStorage("prognosisHapticsEnabled") private var prognosisHapticsEnabled: Bool = false
+    @AppStorage("simulationAutoStartMode") private var simulationAutoStartMode: String = "completeStreets"
     
     private func idString(for kind: SimulationManager.StrategyKind) -> String {
         // Prefer the Identifiable id if it's a String; else stringify it
@@ -50,6 +51,16 @@ struct SettingsView: View {
                             Text("Prognose‑Haptik")
                         }
                         .tint(.accentColor)
+                        Toggle(isOn: .init(
+                            get: { simulationAutoStartMode == "completeStreets" },
+                            set: { simulationAutoStartMode = $0 ? "completeStreets" : "always" }
+                        )) {
+                            Text("Nur bei vollständigen Streets starten")
+                        }
+                        .tint(.accentColor)
+                        Text(simulationAutoStartMode == "completeStreets" ? "Simuliert automatisch, wenn beide Hole Cards vorhanden sind bzw. Flop/Turn/River vollständig liegen." : "Simuliert automatisch bei jeder Änderung an Hand oder Board.")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
                     }
                     
                     // Inline banner between sections
