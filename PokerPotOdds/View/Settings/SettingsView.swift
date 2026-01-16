@@ -79,6 +79,15 @@ struct SettingsView: View {
                             }
                         }
                         NavigationLink {
+                            HeuristicExplanationView()
+                        } label: {
+                            HStack(spacing: 8) {
+                                Image(systemName: "lightbulb")
+                                    .foregroundStyle(.secondary)
+                                Text("Heuristik")
+                            }
+                        }
+                        NavigationLink {
                             ExactOddsExplanationView()
                         } label: {
                             HStack(spacing: 8) {

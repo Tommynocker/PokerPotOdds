@@ -143,16 +143,28 @@ struct SimulationView: View {
                     Button {
                         showingPokerHandsSheet = true
                     } label: {
-                        HStack(spacing: 6) {
-                            Text("Prognose")
-                                .font(.headline)
-                                .foregroundStyle(.primary)
-                            Image(systemName: "arrow.up")
-                                .font(.subheadline)
-                                .foregroundStyle(.primary)
-                                .opacity(0.7)
+                        HStack(spacing: 8) {
+                            HStack(spacing: 6) {
+                                Text("Prognose")
+                                    .font(.headline)
+                                    .foregroundStyle(.primary)
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.8)
+                                    .layoutPriority(1)
+                                Image(systemName: "arrow.up")
+                                    .font(.subheadline)
+                                    .foregroundStyle(.primary)
+                                    .opacity(0.7)
+                            }
+                            Spacer(minLength: 8)
+                            Text(simulationManager.selected.displayName)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.6)
                         }
                     }
+                    .lineLimit(1)
                     .buttonStyle(.plain)
 
                     VStack(alignment: .leading, spacing: 0) {
